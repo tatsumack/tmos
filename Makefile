@@ -12,4 +12,4 @@ run: tmos.img
 	qemu-system-i386 -drive file=tmos.img,format=raw,index=0,if=floppy
 
 clean:
-	rm *.bin *.img *.lst
+	rm *.bin *.img *.sys
