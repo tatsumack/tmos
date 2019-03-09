@@ -55,7 +55,7 @@ msg:
     DB  0x0a
     DB  0
 
-    TIMES 0x1fe-($-$$) DB 0 ;
+    TIMES 0x1fe-($-$$) DB 0 ; filled by 0 up to 0x1fe
 
     DB		0x55, 0xaa
 
