@@ -5,7 +5,7 @@ ipl.img: ipl.bin
 	mformat -f 1440 -C -B ipl.bin -i ipl.img ::
 
 run: ipl.img
-	qemu-system-i386 -drive file=ipl.img,format=raw,index=0,media=disk
+	qemu-system-i386 -drive file=ipl.img,format=raw,index=0,if=floppy
 
 clean:
 	rm *.bin *.img *.lst

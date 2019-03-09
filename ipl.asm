@@ -1,13 +1,11 @@
-; tmos
-; TAB=4
+; tmos-ipl
 
     ORG 0x7c00
 
-    ; floppy disk
-    JMP entry
+; floppy disk
+    JMP SHORT entry
     DB  0x90
-
-    DB  "HELLOIPL"      ; name of boot sector (8 bytes)
+    DB  "TMOS IPL"      ; name of boot sector (8 bytes)
     DW  512             ; size of a sector
     DB  1               ; size of cluster
     DW  1               ; where FAT starts
@@ -26,13 +24,32 @@
     DB  "FAT12   "      ; name of format (8 bytes)
     TIMES 18 DB 0       ; reserve 18 bytes
 
+; initialize register
 entry:
     MOV AX, 0
     MOV SS, AX
     MOV SP, 0x7c00
     MOV DS, AX
-    MOV ES, AX
 
+; read disk
+    MOV AX, 0x0820
+    MOV ES, AX
+    MOV CH, 0           ; cylinder
+    MOV DH, 0           ; head
+    MOV CL, 2           ; sector
+
+    MOV AH, 0x02        ; read disk
+    MOV AL, 1           ; 1 sector
+    MOV BX, 0
+    MOV DL, 0x00        ; A drive
+    INT 0x13            ; disc bios
+    JC  error
+
+fin:
+    HLT
+    JMP fin
+
+error:
     MOV SI, msg
 
 putloop:
@@ -45,21 +62,12 @@ putloop:
     INT 0x10            ; video BIOS
     JMP putloop
 
-fin:
-    HLT
-    JMP fin
-
 msg:
     DB  0x0a, 0x0a      ; 2 new line codes
-    DB  "Hello, World!"
+    DB  "load error"
     DB  0x0a
     DB  0
 
     TIMES 0x1fe-($-$$) DB 0 ; filled by 0 up to 0x1fe
 
-    DB		0x55, 0xaa
-
-    DB	    0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-    TIMES   4600 DB 0
-    DB	    0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-    TIMES	1469432 DB 0
+    DB  0x55, 0xaa
