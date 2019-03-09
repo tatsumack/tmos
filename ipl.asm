@@ -38,12 +38,22 @@ entry:
     MOV DH, 0           ; head
     MOV CL, 2           ; sector
 
+    MOV SI, 0           ; count error
+
+retry:
     MOV AH, 0x02        ; read disk
     MOV AL, 1           ; 1 sector
     MOV BX, 0
     MOV DL, 0x00        ; A drive
     INT 0x13            ; disc bios
-    JC  error
+    JNC fin             ; if not error, jump to fin
+    ADD SI, 1           ; increment error count
+    CMP SI, 5
+    JAE error
+    MOV AH, 0x00        ; reset disk
+    MOV DL, 0x00
+    INT 0x13
+    JMP retry
 
 fin:
     HLT
