@@ -74,9 +74,8 @@ next:
     CMP CH, CYLS
     JB  readloop
 
-fin:
-    HLT
-    JMP fin
+    MOV [0x0ff0], CH    ; memo read num
+    JMP 0xc200          ; exec tmos.sys
 
 error:
     MOV SI, msg
@@ -90,6 +89,10 @@ putloop:
     MOV BX, 15          ; color code
     INT 0x10            ; video BIOS
     JMP putloop
+
+fin:
+    HLT
+    JMP fin
 
 msg:
     DB  0x0a, 0x0a      ; 2 new line codes
