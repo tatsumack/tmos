@@ -38,6 +38,7 @@ entry:
     MOV DH, 0           ; head
     MOV CL, 2           ; sector
 
+readloop:
     MOV SI, 0           ; count error
 
 retry:
@@ -46,7 +47,7 @@ retry:
     MOV BX, 0
     MOV DL, 0x00        ; A drive
     INT 0x13            ; disc bios
-    JNC fin             ; if not error, jump to fin
+    JNC next
     ADD SI, 1           ; increment error count
     CMP SI, 5
     JAE error
@@ -54,6 +55,14 @@ retry:
     MOV DL, 0x00
     INT 0x13
     JMP retry
+
+next:
+    MOV AX, ES
+    ADD AX, 0x0020      ; 0x0020 = 520
+    MOV ES, AX
+    ADD CL, 1
+    CMP CL, 18
+    JBE readloop
 
 fin:
     HLT
