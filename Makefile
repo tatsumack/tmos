@@ -1,11 +1,11 @@
-tmos.bin: tmos.asm
-	nasm tmos.asm -o tmos.bin -l tmos.lst
+ipl.bin: ipl.asm
+	nasm ipl.asm -o ipl.bin -l ipl.lst
 
-tmos.img: tmos.bin
-	mformat -f 1440 -C -B tmos.bin -i tmos.img ::
+ipl.img: ipl.bin
+	mformat -f 1440 -C -B ipl.bin -i ipl.img ::
 
-run: tmos.img
-	qemu-system-i386 -drive file=tmos.img,format=raw,index=0,media=disk
+run: ipl.img
+	qemu-system-i386 -drive file=ipl.img,format=raw,index=0,media=disk
 
 clean:
 	rm *.bin *.img *.lst
