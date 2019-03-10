@@ -2,5 +2,6 @@
 *.lst
 *.img
 *.sys
+*.o
 
 .idea
