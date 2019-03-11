@@ -1,30 +1,31 @@
 CC = /usr/local/bin/i386-elf-gcc
 LD = /usr/local/bin/i386-elf-ld
+BIN_DIR = bin/
 
-ipl.bin: ipl.asm
-	nasm ipl.asm -o ipl.bin
+${BIN_DIR}/ipl.bin: ipl.asm
+	nasm ipl.asm -o ${BIN_DIR}/ipl.bin
 
-tmos.bin: tmos.asm
-	nasm tmos.asm -o tmos.bin
+${BIN_DIR}/tmos.bin: tmos.asm
+	nasm tmos.asm -o ${BIN_DIR}/tmos.bin
 
-asmfunc.o: asmfunc.asm
-	nasm -felf32 -o asmfunc.o asmfunc.asm
+${BIN_DIR}/asmfunc.o: asmfunc.asm
+	nasm -felf32 -o ${BIN_DIR}/asmfunc.o asmfunc.asm
 
-bootpack.o: bootpack.c
-	$(CC) -c -m32 -fno-pic -o bootpack.o bootpack.c
+${BIN_DIR}/bootpack.o: bootpack.c
+	$(CC) -c -m32 -fno-pic -o ${BIN_DIR}/bootpack.o bootpack.c
 
-bootpack.bin: bootpack.o asmfunc.o
-	$(LD) -m elf_i386 -e tmos_main -o bootpack.bin -Ttmos.ls bootpack.o asmfunc.o
+${BIN_DIR}/bootpack.bin: ${BIN_DIR}/bootpack.o ${BIN_DIR}/asmfunc.o
+	$(LD) -m elf_i386 -e tmos_main -o ${BIN_DIR}/bootpack.bin -Ttmos.ls ${BIN_DIR}/bootpack.o ${BIN_DIR}/asmfunc.o
 
-tmos.sys: tmos.bin bootpack.bin
-	cat tmos.bin bootpack.bin > tmos.sys
+${BIN_DIR}/tmos.sys: ${BIN_DIR}/tmos.bin ${BIN_DIR}/bootpack.bin
+	cat ${BIN_DIR}/tmos.bin ${BIN_DIR}/bootpack.bin > ${BIN_DIR}/tmos.sys
 
-tmos.img: ipl.bin tmos.sys
-	mformat -f 1440 -C -B ipl.bin -i tmos.img ::
-	mcopy -i tmos.img tmos.sys ::
+${BIN_DIR}/tmos.img: ${BIN_DIR}/ipl.bin ${BIN_DIR}/tmos.sys
+	mformat -f 1440 -C -B ${BIN_DIR}/ipl.bin -i ${BIN_DIR}/tmos.img ::
+	mcopy -i ${BIN_DIR}/tmos.img ${BIN_DIR}/tmos.sys ::
 
-run: tmos.img
-	qemu-system-i386 -drive file=tmos.img,format=raw,index=0,if=floppy
+run: ${BIN_DIR}/tmos.img
+	qemu-system-i386 -drive file=${BIN_DIR}/tmos.img,format=raw,index=0,if=floppy
 
 clean:
-	rm *.bin *.img *.sys *.o
+	rm bin/*

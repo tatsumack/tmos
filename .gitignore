@@ -3,6 +3,7 @@
 *.img
 *.sys
 *.o
+bin/
 
 .idea
 
