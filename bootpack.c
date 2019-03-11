@@ -13,6 +13,8 @@ void io_store_eflags(int eflags);
 // declare
 void init_palette(void);
 
+void init_screen(unsigned char* vram, int width, int height);
+
 void set_palette(unsigned char* rgb, int size);
 
 void draw_rec(unsigned char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1);
@@ -44,27 +46,7 @@ void tmos_main(void) {
     init_palette();
 
     BootInfo* binfo = (BootInfo*) 0x0ff0;
-
-    char* vram = (char*) binfo->vram;
-    int width = binfo->width;
-    int height = binfo->height;
-
-    draw_rec(vram, width, COL8_008484, 0, 0, width - 1, height - 29);
-    draw_rec(vram, width, COL8_C6C6C6, 0, height - 28, width - 1, height - 28);
-    draw_rec(vram, width, COL8_FFFFFF, 0, height - 27, width - 1, height - 27);
-    draw_rec(vram, width, COL8_C6C6C6, 0, height - 26, width - 1, height - 1);
-
-    draw_rec(vram, width, COL8_FFFFFF, 3, height - 24, 59, height - 24);
-    draw_rec(vram, width, COL8_FFFFFF, 2, height - 24, 2, height - 4);
-    draw_rec(vram, width, COL8_848484, 3, height - 4, 59, height - 4);
-    draw_rec(vram, width, COL8_848484, 59, height - 23, 59, height - 5);
-    draw_rec(vram, width, COL8_000000, 2, height - 3, 59, height - 3);
-    draw_rec(vram, width, COL8_000000, 60, height - 24, 60, height - 3);
-
-    draw_rec(vram, width, COL8_848484, width - 47, height - 24, width - 4, height - 24);
-    draw_rec(vram, width, COL8_848484, width - 47, height - 23, width - 47, height - 4);
-    draw_rec(vram, width, COL8_FFFFFF, width - 47, height - 3, width - 4, height - 3);
-    draw_rec(vram, width, COL8_FFFFFF, width - 3, height - 24, width - 3, height - 3);
+    init_screen(binfo->vram, binfo->width, binfo->height);
 
     for (;;) {
         io_hlt();
@@ -106,6 +88,26 @@ void set_palette(unsigned char* rgb, int size) {
     }
     io_store_eflags(eflags);
     return;
+}
+
+void init_screen(unsigned char* vram, int width, int height)
+{
+    draw_rec(vram, width, COL8_008484, 0, 0, width - 1, height - 29);
+    draw_rec(vram, width, COL8_C6C6C6, 0, height - 28, width - 1, height - 28);
+    draw_rec(vram, width, COL8_FFFFFF, 0, height - 27, width - 1, height - 27);
+    draw_rec(vram, width, COL8_C6C6C6, 0, height - 26, width - 1, height - 1);
+
+    draw_rec(vram, width, COL8_FFFFFF, 3, height - 24, 59, height - 24);
+    draw_rec(vram, width, COL8_FFFFFF, 2, height - 24, 2, height - 4);
+    draw_rec(vram, width, COL8_848484, 3, height - 4, 59, height - 4);
+    draw_rec(vram, width, COL8_848484, 59, height - 23, 59, height - 5);
+    draw_rec(vram, width, COL8_000000, 2, height - 3, 59, height - 3);
+    draw_rec(vram, width, COL8_000000, 60, height - 24, 60, height - 3);
+
+    draw_rec(vram, width, COL8_848484, width - 47, height - 24, width - 4, height - 24);
+    draw_rec(vram, width, COL8_848484, width - 47, height - 23, width - 47, height - 4);
+    draw_rec(vram, width, COL8_FFFFFF, width - 47, height - 3, width - 4, height - 3);
+    draw_rec(vram, width, COL8_FFFFFF, width - 3, height - 24, width - 3, height - 3);
 }
 
 void draw_rec(unsigned char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1) {
