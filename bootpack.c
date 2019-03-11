@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 // asmfunc
 void io_hlt(void);
 
@@ -54,6 +56,10 @@ void tmos_main(void) {
 
     putstring8(binfo->vram, binfo->width, 31, 31, COL8_000000, "TMOS");
     putstring8(binfo->vram, binfo->width, 30, 30, COL8_FFFFFF, "TMOS");
+
+    char* s;
+    sprintf(s, "width = %d", binfo->width);
+    putstring8(binfo->vram, binfo->width, 16, 64, COL8_FFFFFF, s);
 
     for (;;) {
         io_hlt();

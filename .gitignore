@@ -3,8 +3,8 @@
 *.img
 *.sys
 *.o
-bin/
 
 .idea
 
+bin/
 cmake-build-debug/
