@@ -34,14 +34,15 @@ void inthandler21(int *esp) {
     fifo_put(&keyfifo, data);
 }
 
+FIFO mousefifo;
+
 // interrupted by mouse
 void inthandler2c(int *esp) {
-    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
-    draw_rec(binfo->vram, binfo->width, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-    putstring8(binfo->vram, binfo->width, 0, 0, COL8_FFFFFF, "INT 2C (IRQ-12) : PS/2 mouse");
-    for (;;) {
-        io_hlt();
-    }
+    io_out8(PIC1_OCW2, 0x64); // ack
+    io_out8(PIC0_OCW2, 0x62); // ack
+
+    unsigned char data = (unsigned char)io_in8(PORT_KEYDAT);
+    fifo_put(&mousefifo, data);
 }
 
 // interrupted by PIC1 on initialization
