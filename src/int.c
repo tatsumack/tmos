@@ -35,7 +35,7 @@ void inthandler21(int *esp) {
 }
 
 // interrupted by mouse
-void inthandler27(int *esp) {
+void inthandler2c(int *esp) {
     BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
     draw_rec(binfo->vram, binfo->width, COL8_000000, 0, 0, 32 * 8 - 1, 15);
     putstring8(binfo->vram, binfo->width, 0, 0, COL8_FFFFFF, "INT 2C (IRQ-12) : PS/2 mouse");
@@ -45,6 +45,6 @@ void inthandler27(int *esp) {
 }
 
 // interrupted by PIC1 on initialization
-void inthandler2c(int *esp) {
+void inthandler27(int *esp) {
     io_out8(PIC0_OCW2, 0x67); // ack to IRQ-07
 }
