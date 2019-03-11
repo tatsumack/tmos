@@ -2,12 +2,21 @@
 
 #include "bootpack.h"
 
+extern FIFO keyfifo;
+
 void tmos_main(void) {
     init_gdtidt();
     init_pic();
 
     // enable interrupt
     io_sti();
+
+    unsigned char keybuf[32];
+    fifo_init(&keyfifo, 32, (unsigned char *)keybuf);
+
+    io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
+    io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
+
 
     init_palette();
 
@@ -23,15 +32,21 @@ void tmos_main(void) {
     putstring8(binfo->vram, binfo->width, 31, 31, COL8_000000, "TMOS");
     putstring8(binfo->vram, binfo->width, 30, 30, COL8_FFFFFF, "TMOS");
 
-    char s[40];
-    sprintf(s, "width = %d", binfo->width);
-    putstring8(binfo->vram, binfo->width, 16, 64, COL8_FFFFFF, s);
-
-    io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
-    io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
 
     for (;;) {
-        io_hlt();
+        io_cli();
+        if (fifo_empty(&keyfifo)) {
+            io_stihlt();
+            continue;
+        }
+
+        int i = fifo_get(&keyfifo);
+        io_sti();
+
+        char s[40];
+        sprintf(s, "%02X", i);
+        draw_rec(binfo->vram, binfo->width, COL8_008484, 0, 16, 15, 31);
+        putstring8(binfo->vram, binfo->width, 0, 16, COL8_FFFFFF, s);
     }
 }
 

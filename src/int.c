@@ -22,14 +22,16 @@ void init_pic(void) {
     io_out8(PIC1_IMR,  0xff  ); // 11111111 disable all interrupts
 }
 
+#define PORT_KEYDAT 0x0060
+
+FIFO keyfifo;
+
 // interrupted by keyboard
 void inthandler21(int *esp) {
-    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
-    draw_rec(binfo->vram, binfo->width, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-    putstring8(binfo->vram, binfo->width, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-1) : PS/2 keyboard");
-    for (;;) {
-        io_hlt();
-    }
+    io_out8(PIC0_OCW2, 0x61); // ack
+
+    unsigned char data = (unsigned char)io_in8(PORT_KEYDAT);
+    fifo_put(&keyfifo, data);
 }
 
 // interrupted by mouse
