@@ -4,6 +4,11 @@
 
 void tmos_main(void) {
     init_gdtidt();
+    init_pic();
+
+    // enable interrupt
+    io_sti();
+
     init_palette();
 
     BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
@@ -21,6 +26,9 @@ void tmos_main(void) {
     char s[40];
     sprintf(s, "width = %d", binfo->width);
     putstring8(binfo->vram, binfo->width, 16, 64, COL8_FFFFFF, s);
+
+    io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
+    io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
 
     for (;;) {
         io_hlt();

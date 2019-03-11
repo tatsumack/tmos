@@ -4,11 +4,19 @@
 
     GLOBAL io_hlt
     GLOBAL io_cli
+    GLOBAL io_sti
     GLOBAL io_out8
     GLOBAL io_load_eflags
     GLOBAL io_store_eflags
     GLOBAL load_gdtr
     GLOBAL load_idtr
+    GLOBAL asm_inthandler21
+    GLOBAL asm_inthandler27
+    GLOBAL asm_inthandler2c
+
+    EXTERN inthandler21
+    EXTERN inthandler27
+    EXTERN inthandler2c
 
 [SECTION .text]
 
@@ -19,6 +27,10 @@ io_hlt: ; void io_hlt(void);
 io_cli: ; void io_cli(void);
     CLI
     RET
+
+io_sti:	; void io_sti(void);
+        STI
+        RET
 
 io_out8: ; void io_out8(int port, int data);
     MOV     EDX, [ESP+4]
@@ -48,3 +60,51 @@ load_idtr: ; void load_idtr(int limit, int addr);
     MOV     [ESP+6], AX
     LIDT    [ESP+6]
     RET
+
+asm_inthandler21:
+        PUSH	ES
+        PUSH	DS
+        PUSHAD
+        MOV		EAX,ESP
+        PUSH	EAX
+        MOV		AX,SS
+        MOV		DS,AX
+        MOV		ES,AX
+        CALL	inthandler21
+        POP		EAX
+        POPAD
+        POP		DS
+        POP		ES
+        IRETD
+
+asm_inthandler27:
+        PUSH	ES
+        PUSH	DS
+        PUSHAD
+        MOV		EAX,ESP
+        PUSH	EAX
+        MOV		AX,SS
+        MOV		DS,AX
+        MOV		ES,AX
+        CALL	inthandler27
+        POP		EAX
+        POPAD
+        POP		DS
+        POP		ES
+        IRETD
+
+asm_inthandler2c:
+        PUSH	ES
+        PUSH	DS
+        PUSHAD
+        MOV		EAX,ESP
+        PUSH	EAX
+        MOV		AX,SS
+        MOV		DS,AX
+        MOV		ES,AX
+        CALL	inthandler2c
+        POP		EAX
+        POPAD
+        POP		DS
+        POP		ES
+        IRETD
