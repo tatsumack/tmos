@@ -1,36 +1,34 @@
 CC = /usr/local/bin/i386-elf-gcc
 LD = /usr/local/bin/i386-elf-ld
-BIN_DIR = bin
-LIBPATH = golibc/
-INCPATH = golibc/
+BIN_PATH = bin
+SRC_PATH = src
+LIB_PATH = golibc/
+INC_PATH = golibc/
 
-${BIN_DIR}/ipl.bin: ipl.asm
-	nasm ipl.asm -o ${BIN_DIR}/ipl.bin
+SRCS = $(wildcard ${SRC_PATH}/*.c)
+OBJS = $(addprefix ${BIN_PATH}/, $(notdir $(SRCS:.c=.o)))
 
-${BIN_DIR}/tmos.bin: tmos.asm
-	nasm tmos.asm -o ${BIN_DIR}/tmos.bin
+${BIN_PATH}/asmfunc.o: ${SRC_PATH}/asmfunc.asm
+	nasm -felf32 -o $@ $<
 
-${BIN_DIR}/asmfunc.o: asmfunc.asm
-	nasm -felf32 -o ${BIN_DIR}/asmfunc.o asmfunc.asm
+${BIN_PATH}/%.bin: ${SRC_PATH}/%.asm
+	nasm $< -o $@
 
-${BIN_DIR}/bootpack.o: bootpack.c
-	$(CC) -c -m32 -fno-pic -I$(INCPATH) -o ${BIN_DIR}/bootpack.o bootpack.c
+${BIN_PATH}/%.o: ${SRC_PATH}/%.c
+	$(CC) -c -m32 -fno-pic -I${INC_PATH} -o $@ $<
 
-${BIN_DIR}/ascii_fonts.o: ascii_fonts.c
-	$(CC) -c -m32 -fno-pic -I$(INCPATH) -o ${BIN_DIR}/ascii_fonts.o ascii_fonts.c
+${BIN_PATH}/bootpack.bin: ${OBJS} ${BIN_PATH}/asmfunc.o
+	$(LD) -m elf_i386 -e tmos_main -o ${BIN_PATH}/bootpack.bin -T${SRC_PATH}/tmos.ls ${BIN_PATH}/asmfunc.o ${OBJS} -static -L$(LIB_PATH) -lgolibc
 
-${BIN_DIR}/bootpack.bin: ${BIN_DIR}/bootpack.o ${BIN_DIR}/asmfunc.o ${BIN_DIR}/ascii_fonts.o
-	$(LD) -m elf_i386 -e tmos_main -o ${BIN_DIR}/bootpack.bin -Ttmos.ls ${BIN_DIR}/bootpack.o ${BIN_DIR}/asmfunc.o ${BIN_DIR}/ascii_fonts.o -static -L$(LIBPATH) -lgolibc
+${BIN_PATH}/tmos.sys: ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin
+	cat ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin > ${BIN_PATH}/tmos.sys
 
-${BIN_DIR}/tmos.sys: ${BIN_DIR}/tmos.bin ${BIN_DIR}/bootpack.bin
-	cat ${BIN_DIR}/tmos.bin ${BIN_DIR}/bootpack.bin > ${BIN_DIR}/tmos.sys
+${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys
+	mformat -f 1440 -C -B ${BIN_PATH}/ipl.bin -i ${BIN_PATH}/tmos.img ::
+	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/tmos.sys ::
 
-${BIN_DIR}/tmos.img: ${BIN_DIR}/ipl.bin ${BIN_DIR}/tmos.sys
-	mformat -f 1440 -C -B ${BIN_DIR}/ipl.bin -i ${BIN_DIR}/tmos.img ::
-	mcopy -i ${BIN_DIR}/tmos.img ${BIN_DIR}/tmos.sys ::
-
-run: ${BIN_DIR}/tmos.img
-	qemu-system-i386 -drive file=${BIN_DIR}/tmos.img,format=raw,index=0,if=floppy
+run: ${BIN_PATH}/tmos.img
+	qemu-system-i386 -drive file=${BIN_PATH}/tmos.img,format=raw,index=0,if=floppy
 
 clean:
 	rm bin/*

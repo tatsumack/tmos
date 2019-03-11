@@ -4,7 +4,9 @@ project(TMOS)
 
 add_executable(
     TMOS
-    bootpack.c
-    ascii_fonts.c
+    src/bootpack.c
+    src/graphic.c
+    src/desctbl.c
+    src/ascii_fonts.c
 )
 
