@@ -34,29 +34,37 @@ void draw_rec(unsigned char* vram, int width, unsigned char c, int x0, int y0, i
 #define COL8_008484        14
 #define COL8_848484        15
 
+typedef struct BootInfo {
+    char cyles, leds, vmode, reserve;
+    short width, height;
+    char* vram;
+} BootInfo;
+
 void tmos_main(void) {
     init_palette();
 
-    char* vram = (char*) 0xa0000;
-    int width = 320;
-    int height = 200;
+    BootInfo* binfo = (BootInfo*) 0x0ff0;
 
-    draw_rec(vram, width, COL8_008484,  0,         0,           width -  1, height - 29);
-    draw_rec(vram, width, COL8_C6C6C6,  0,         height - 28, width -  1, height - 28);
-    draw_rec(vram, width, COL8_FFFFFF,  0,         height - 27, width -  1, height - 27);
-    draw_rec(vram, width, COL8_C6C6C6,  0,         height - 26, width -  1, height -  1);
+    char* vram = (char*) binfo->vram;
+    int width = binfo->width;
+    int height = binfo->height;
 
-    draw_rec(vram, width, COL8_FFFFFF,  3,         height - 24, 59,         height - 24);
-    draw_rec(vram, width, COL8_FFFFFF,  2,         height - 24,  2,         height -  4);
-    draw_rec(vram, width, COL8_848484,  3,         height -  4, 59,         height -  4);
-    draw_rec(vram, width, COL8_848484, 59,         height - 23, 59,         height -  5);
-    draw_rec(vram, width, COL8_000000,  2,         height -  3, 59,         height -  3);
-    draw_rec(vram, width, COL8_000000, 60,         height - 24, 60,         height -  3);
+    draw_rec(vram, width, COL8_008484, 0, 0, width - 1, height - 29);
+    draw_rec(vram, width, COL8_C6C6C6, 0, height - 28, width - 1, height - 28);
+    draw_rec(vram, width, COL8_FFFFFF, 0, height - 27, width - 1, height - 27);
+    draw_rec(vram, width, COL8_C6C6C6, 0, height - 26, width - 1, height - 1);
 
-    draw_rec(vram, width, COL8_848484, width - 47, height - 24, width -  4, height - 24);
-    draw_rec(vram, width, COL8_848484, width - 47, height - 23, width - 47, height -  4);
-    draw_rec(vram, width, COL8_FFFFFF, width - 47, height -  3, width -  4, height -  3);
-    draw_rec(vram, width, COL8_FFFFFF, width -  3, height - 24, width -  3, height -  3);
+    draw_rec(vram, width, COL8_FFFFFF, 3, height - 24, 59, height - 24);
+    draw_rec(vram, width, COL8_FFFFFF, 2, height - 24, 2, height - 4);
+    draw_rec(vram, width, COL8_848484, 3, height - 4, 59, height - 4);
+    draw_rec(vram, width, COL8_848484, 59, height - 23, 59, height - 5);
+    draw_rec(vram, width, COL8_000000, 2, height - 3, 59, height - 3);
+    draw_rec(vram, width, COL8_000000, 60, height - 24, 60, height - 3);
+
+    draw_rec(vram, width, COL8_848484, width - 47, height - 24, width - 4, height - 24);
+    draw_rec(vram, width, COL8_848484, width - 47, height - 23, width - 47, height - 4);
+    draw_rec(vram, width, COL8_FFFFFF, width - 47, height - 3, width - 4, height - 3);
+    draw_rec(vram, width, COL8_FFFFFF, width - 3, height - 24, width - 3, height - 3);
 
     for (;;) {
         io_hlt();
