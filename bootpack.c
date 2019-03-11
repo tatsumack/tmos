@@ -80,7 +80,6 @@ void init_palette(void) {
             0x84, 0x84, 0x84     /* 15:Dark Gray */
     };
     set_palette(table_rgb, 16);
-    return;
 }
 
 void set_palette(unsigned char* rgb, int size) {
@@ -94,7 +93,6 @@ void set_palette(unsigned char* rgb, int size) {
         rgb += 3;
     }
     io_store_eflags(eflags);
-    return;
 }
 
 void init_screen(char* vram, int width, int height) {
