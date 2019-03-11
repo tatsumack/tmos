@@ -17,6 +17,8 @@ void init_palette(void);
 
 void init_screen(char* vram, int width, int height);
 
+void init_mouse_cursor8(char* mouse, char bc);
+
 void set_palette(unsigned char* rgb, int size);
 
 void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1);
@@ -24,6 +26,9 @@ void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, in
 void putfont8(char* vram, int width, int x, int y, char color, char* font);
 
 void putstring8(char* vram, int width, int x, int y, char color, unsigned char* s);
+
+void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth);
+
 
 #define COL8_000000        0
 #define COL8_FF0000        1
@@ -54,10 +59,16 @@ void tmos_main(void) {
     BootInfo* binfo = (BootInfo*) 0x0ff0;
     init_screen(binfo->vram, binfo->width, binfo->height);
 
+    char mcursor[256];
+    init_mouse_cursor8(mcursor, COL8_008484);
+    int mx = (binfo->width - 16) / 2;
+    int my = (binfo->height - 28 - 16) / 2;
+    putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
+
     putstring8(binfo->vram, binfo->width, 31, 31, COL8_000000, "TMOS");
     putstring8(binfo->vram, binfo->width, 30, 30, COL8_FFFFFF, "TMOS");
 
-    char* s;
+    char s[40];
     sprintf(s, "width = %d", binfo->width);
     putstring8(binfo->vram, binfo->width, 16, 64, COL8_FFFFFF, s);
 
@@ -149,3 +160,46 @@ void putstring8(char* vram, int width, int x, int y, char color, unsigned char* 
     }
 }
 
+void init_mouse_cursor8(char* mouse, char bc) {
+    static char cursor[16][16] = {
+            "**************..",
+            "*OOOOOOOOOOO*...",
+            "*OOOOOOOOOO*....",
+            "*OOOOOOOOO*.....",
+            "*OOOOOOOO*......",
+            "*OOOOOOO*.......",
+            "*OOOOOOO*.......",
+            "*OOOOOOOO*......",
+            "*OOOO**OOO*.....",
+            "*OOO*..*OOO*....",
+            "*OO*....*OOO*...",
+            "*O*......*OOO*..",
+            "**........*OOO*.",
+            "*..........*OOO*",
+            "............*OO*",
+            ".............***"
+    };
+    int x, y;
+
+    for (y = 0; y < 16; y++) {
+        for (x = 0; x < 16; x++) {
+            if (cursor[y][x] == '*') {
+                mouse[y * 16 + x] = COL8_000000;
+            }
+            if (cursor[y][x] == 'O') {
+                mouse[y * 16 + x] = COL8_FFFFFF;
+            }
+            if (cursor[y][x] == '.') {
+                mouse[y * 16 + x] = bc;
+            }
+        }
+    }
+}
+
+void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth) {
+    for (int y = 0; y < pheight; y++) {
+        for (int x = 0; x < pwidth; x++) {
+            vram[(py0 + y) * width + (px0 + x)] = buf[y * bwidth + x];
+        }
+    }
+}
