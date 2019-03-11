@@ -13,11 +13,15 @@ void io_store_eflags(int eflags);
 // declare
 void init_palette(void);
 
-void init_screen(unsigned char* vram, int width, int height);
+void init_screen(char* vram, int width, int height);
 
 void set_palette(unsigned char* rgb, int size);
 
-void draw_rec(unsigned char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1);
+void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1);
+
+void putfont8(char* vram, int width, int x, int y, char color, char* font);
+
+void putstring8(char* vram, int width, int x, int y, char color, unsigned char* s);
 
 #define COL8_000000        0
 #define COL8_FF0000        1
@@ -47,6 +51,9 @@ void tmos_main(void) {
 
     BootInfo* binfo = (BootInfo*) 0x0ff0;
     init_screen(binfo->vram, binfo->width, binfo->height);
+
+    putstring8(binfo->vram, binfo->width, 31, 31, COL8_000000, "TMOS");
+    putstring8(binfo->vram, binfo->width, 30, 30, COL8_FFFFFF, "TMOS");
 
     for (;;) {
         io_hlt();
@@ -90,8 +97,7 @@ void set_palette(unsigned char* rgb, int size) {
     return;
 }
 
-void init_screen(unsigned char* vram, int width, int height)
-{
+void init_screen(char* vram, int width, int height) {
     draw_rec(vram, width, COL8_008484, 0, 0, width - 1, height - 29);
     draw_rec(vram, width, COL8_C6C6C6, 0, height - 28, width - 1, height - 28);
     draw_rec(vram, width, COL8_FFFFFF, 0, height - 27, width - 1, height - 27);
@@ -110,10 +116,32 @@ void init_screen(unsigned char* vram, int width, int height)
     draw_rec(vram, width, COL8_FFFFFF, width - 3, height - 24, width - 3, height - 3);
 }
 
-void draw_rec(unsigned char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1) {
+void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1) {
     for (int y = y0; y <= y1; y++) {
         for (int x = x0; x <= x1; x++)
             vram[y * width + x] = c;
     }
-    return;
 }
+
+void putfont8(char* vram, int width, int x, int y, char color, char* font) {
+    // NOTE font size = 8 * 16
+    for (int i = 0; i < 16; i++) {
+        char* p = vram + (y + i) * width + x;
+        char d = font[i];
+        for (int j = 0; j < 8; j++) {
+            if ((d >> j) & 1) {
+                p[7 - j] = color;
+            }
+        }
+    }
+}
+
+void putstring8(char* vram, int width, int x, int y, char color, unsigned char* s) {
+    extern char ascii_fonts[4096];
+    while (*s != 0x00) {
+        putfont8(vram, width, x, y, color, ascii_fonts + *s * 16);
+        x += 8;
+        s++;
+    }
+}
+
