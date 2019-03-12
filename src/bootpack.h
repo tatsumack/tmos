@@ -132,3 +132,30 @@ void inthandler2c(int* esp);
 #define PIC1_ICW2        0x00a1
 #define PIC1_ICW3        0x00a1
 #define PIC1_ICW4        0x00a1
+
+// keyboard.c
+void init_keyboard(void);
+
+void wait_kbc_sendready(void);
+
+#define PORT_KEYDAT                0x0060
+#define PORT_KEYSTA                0x0064
+#define PORT_KEYCMD                0x0064
+#define KEYSTA_SEND_NOTREADY    0x02
+#define KEYCMD_WRITE_MODE        0x60
+#define KBC_MODE                0x47
+
+// mouse.c
+typedef struct MouseDec {
+    unsigned char buf[3], phase;
+    int x, y, btn;
+} MouseDec;
+
+void enable_mouse(MouseDec* mdec);
+
+int mouse_decode(MouseDec* mdec, unsigned char dat);
+
+
+#define KEYCMD_SENDTO_MOUSE        0xd4
+#define MOUSECMD_ENABLE            0xf4
+
