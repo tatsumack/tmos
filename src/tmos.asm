@@ -27,50 +27,51 @@ VRAM	EQU		0x0ff8
 		INT		0x16            ; keyboard BIOS
 		MOV		[LEDS],AL
 
-
+; settings for PIC
 		MOV		AL,0xff
-		OUT		0x21,AL
+		OUT		0x21,AL         ; io_out(PIC0_IMR, 0xff)  disable all interrupts for PIC0
 		NOP
-		OUT		0xa1,AL
+		OUT		0xa1,AL         ; io_out(PIC1_IMR, 0xff)  disable all interrupts for PIC1
 
-		CLI
+		CLI                     ; clear interrupts flag
 
-		CALL	waitkbdout
+; settings for KBC
+		CALL	waitkbdout      ; wait for kbc
 		MOV		AL,0xd1
-		OUT		0x64,AL
+		OUT		0x64,AL         ; io_out(PORT_KEYCMD, KEYCMD_WRITE_OUTPORT)
 		CALL	waitkbdout
 		MOV		AL,0xdf
-		OUT		0x60,AL
+		OUT		0x60,AL         ; io_out(PORT_KEYDAT, KBC_OUTPORT_A20G_ENABLE) enable A20GATE to extend memory spaces over 1MB
 		CALL	waitkbdout
 
-
+; settings for GDT
 		LGDT	[GDTR0]
 		MOV		EAX,CR0
-		AND		EAX,0x7fffffff
-		OR		EAX,0x00000001
+		AND		EAX,0x7fffffff  ; disable paging
+		OR		EAX,0x00000001  ; transit to protect mode
 		MOV		CR0,EAX
 		JMP		pipelineflush
 pipelineflush:
-		MOV		AX,1*8
+		MOV		AX,1*8          ; RW segment
 		MOV		DS,AX
 		MOV		ES,AX
 		MOV		FS,AX
 		MOV		GS,AX
 		MOV		SS,AX
 
-
+; move bootpack
 		MOV		ESI,bootpack
 		MOV		EDI,BOTPAK
 		MOV		ECX,512*1024/4
 		CALL	memcpy
 
-
+; move boot sector
 		MOV		ESI,0x7c00
 		MOV		EDI,DSKCAC
 		MOV		ECX,512/4
 		CALL	memcpy
 
-
+; move rest
 		MOV		ESI,DSKCAC0+512
 		MOV		EDI,DSKCAC+512
 		MOV		ECX,0
@@ -79,7 +80,7 @@ pipelineflush:
 		SUB		ECX,512/4
 		CALL	memcpy
 
-
+; exec bootpack
 		MOV		EBX,BOTPAK
 		MOV		ECX,[EBX+16]
 		ADD		ECX,3
