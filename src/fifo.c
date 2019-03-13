@@ -2,7 +2,7 @@
 
 #define FLAGS_OVERRUN 0x001
 
-void fifo_init(FIFO* fifo, int size, unsigned char* buf) {
+void fifo_init(FIFO* fifo, int size, uchar* buf) {
     fifo->size = size;
     fifo->buf = buf;
     fifo->free = size;
@@ -11,7 +11,7 @@ void fifo_init(FIFO* fifo, int size, unsigned char* buf) {
     fifo->read = 0;
 }
 
-int fifo_put(FIFO* fifo, unsigned char data) {
+int fifo_put(FIFO* fifo, uchar data) {
     if (fifo->free == 0) {
         fifo->flags |= FLAGS_OVERRUN;
         return -1;

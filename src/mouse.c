@@ -8,7 +8,7 @@ void enable_mouse(MouseDec* mdec) {
     mdec->phase = 0;
 }
 
-int mouse_decode(MouseDec* mdec, unsigned char dat) {
+int mouse_decode(MouseDec* mdec, uchar dat) {
     if (mdec->phase == 0) {
         // wait initial ack
         if (dat == 0xfa) {

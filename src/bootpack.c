@@ -12,11 +12,11 @@ void tmos_main(void) {
     // enable interrupt
     io_sti();
 
-    unsigned char keybuf[32];
-    fifo_init(&keyfifo, 32, (unsigned char*) keybuf);
+    uchar keybuf[32];
+    fifo_init(&keyfifo, 32, (uchar*) keybuf);
 
-    unsigned char mousebuf[128];
-    fifo_init(&mousefifo, 128, (unsigned char*) mousebuf);
+    uchar mousebuf[128];
+    fifo_init(&mousefifo, 128, (uchar*) mousebuf);
 
     io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
     io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
@@ -35,7 +35,7 @@ void tmos_main(void) {
     putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
 
     // memory test
-    unsigned char membuf[40];
+    uchar membuf[40];
     int res = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
     sprintf(membuf, "memory %dMB", res);
     putstring8(binfo->vram, binfo->width, 4, 32, COL8_FFFFFF, membuf);

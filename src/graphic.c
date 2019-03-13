@@ -1,7 +1,7 @@
 #include "bootpack.h"
 
 void init_palette(void) {
-    static unsigned char table_rgb[16 * 3] = {
+    static uchar table_rgb[16 * 3] = {
             0x00, 0x00, 0x00,    /*  0:Black */
             0xff, 0x00, 0x00,    /*  1:Red */
             0x00, 0xff, 0x00,    /*  2:Green */
@@ -22,7 +22,7 @@ void init_palette(void) {
     set_palette(table_rgb, 16);
 }
 
-void set_palette(unsigned char* rgb, int size) {
+void set_palette(uchar* rgb, int size) {
     int eflags = io_load_eflags();
     io_cli();
     io_out8(0x03c8, 0);
@@ -54,7 +54,7 @@ void init_screen(char* vram, int width, int height) {
     draw_rec(vram, width, COL8_FFFFFF, width - 3, height - 24, width - 3, height - 3);
 }
 
-void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1) {
+void draw_rec(char* vram, int width, uchar c, int x0, int y0, int x1, int y1) {
     for (int y = y0; y <= y1; y++) {
         for (int x = x0; x <= x1; x++)
             vram[y * width + x] = c;
@@ -74,7 +74,7 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font) {
     }
 }
 
-void putstring8(char* vram, int width, int x, int y, char color, unsigned char* s) {
+void putstring8(char* vram, int width, int x, int y, char color, uchar* s) {
     extern char ascii_fonts[4096];
     while (*s != 0x00) {
         putfont8(vram, width, x, y, color, ascii_fonts + *s * 16);

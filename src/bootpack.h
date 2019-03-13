@@ -1,3 +1,6 @@
+typedef unsigned int uint;
+typedef unsigned char uchar;
+
 #define COL8_000000        0
 #define COL8_FF0000        1
 #define COL8_00FF00        2
@@ -14,7 +17,6 @@
 #define COL8_840084        13
 #define COL8_008484        14
 #define COL8_848484        15
-
 
 #define ADR_BOOTINFO 0x00000ff0
 typedef struct BootInfo {
@@ -71,13 +73,13 @@ int asm_memtest(int start, int end);
 
 // fifo.c
 typedef struct FIFO {
-    unsigned char* buf;
+    uchar* buf;
     int write, read, size, free, flags;
 } FIFO;
 
-void fifo_init(FIFO* fifo, int size, unsigned char* buf);
+void fifo_init(FIFO* fifo, int size, uchar* buf);
 
-int fifo_put(FIFO* fifo, unsigned char data);
+int fifo_put(FIFO* fifo, uchar data);
 
 int fifo_get(FIFO* fifo);
 
@@ -90,20 +92,20 @@ void init_screen(char* vram, int width, int height);
 
 void init_mouse_cursor8(char* mouse, char bc);
 
-void set_palette(unsigned char* rgb, int size);
+void set_palette(uchar* rgb, int size);
 
-void draw_rec(char* vram, int width, unsigned char c, int x0, int y0, int x1, int y1);
+void draw_rec(char* vram, int width, uchar c, int x0, int y0, int x1, int y1);
 
 void putfont8(char* vram, int width, int x, int y, char color, char* font);
 
-void putstring8(char* vram, int width, int x, int y, char color, unsigned char* s);
+void putstring8(char* vram, int width, int x, int y, char color, uchar* s);
 
 void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth);
 
 // desctbl.c
 void init_gdtidt(void);
 
-void set_segmdesc(SegmentDescriptor* sd, unsigned int limit, int base, int ar);
+void set_segmdesc(SegmentDescriptor* sd, uint limit, int base, int ar);
 
 void set_gatedesc(GateDescriptor* gd, int offset, int selector, int ar);
 
@@ -153,13 +155,13 @@ void wait_kbc_sendready(void);
 
 // mouse.c
 typedef struct MouseDec {
-    unsigned char buf[3], phase;
+    uchar buf[3], phase;
     int x, y, btn;
 } MouseDec;
 
 void enable_mouse(MouseDec* mdec);
 
-int mouse_decode(MouseDec* mdec, unsigned char dat);
+int mouse_decode(MouseDec* mdec, uchar dat);
 
 
 #define KEYCMD_SENDTO_MOUSE        0xd4
@@ -169,4 +171,4 @@ int mouse_decode(MouseDec* mdec, unsigned char dat);
 #define EFLAGS_AC_BIT       0x00040000
 #define CR0_CACHE_DISABLE   0x60000000
 
-unsigned int memtest(unsigned int start, unsigned int end);
+uint memtest(uint start, uint end);

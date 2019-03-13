@@ -23,7 +23,7 @@ void init_gdtidt(void) {
     set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 * 8, AR_INTGATE32);
 }
 
-void set_segmdesc(SegmentDescriptor* sd, unsigned int limit, int base, int ar) {
+void set_segmdesc(SegmentDescriptor* sd, uint limit, int base, int ar) {
     if (limit > 0xfffff) {
         ar |= 0x8000;      // Gbit = 1
         limit /= 0x1000;

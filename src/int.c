@@ -30,7 +30,7 @@ FIFO keyfifo;
 void inthandler21(int *esp) {
     io_out8(PIC0_OCW2, 0x61); // ack
 
-    unsigned char data = (unsigned char)io_in8(PORT_KEYDAT);
+    uchar data = (uchar)io_in8(PORT_KEYDAT);
     fifo_put(&keyfifo, data);
 }
 
@@ -41,7 +41,7 @@ void inthandler2c(int *esp) {
     io_out8(PIC1_OCW2, 0x64); // ack
     io_out8(PIC0_OCW2, 0x62); // ack
 
-    unsigned char data = (unsigned char)io_in8(PORT_KEYDAT);
+    uchar data = (uchar)io_in8(PORT_KEYDAT);
     fifo_put(&mousefifo, data);
 }
 
