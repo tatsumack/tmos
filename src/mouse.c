@@ -1,11 +1,24 @@
 #include "bootpack.h"
 
-void enable_mouse(MouseDec* mdec) {
+FIFO mousefifo;
+uchar fifobuf[MOUSE_FIFOBUF];
+
+void init_mouse(MouseInfo* minfo, MouseDec* mdec) {
+    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
+
     wait_kbc_sendready();
     io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
     wait_kbc_sendready();
     io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+
+    init_mouse_cursor8(minfo->image, COL8_008484);
+    minfo->x = (binfo->width - 16) / 2;
+    minfo->y = (binfo->height - 28 - 16) / 2;
+    putblock8_8(binfo->vram, binfo->width, 16, 16, minfo->x, minfo->y, minfo->image, 16);
+
     mdec->phase = 0;
+
+    fifo_init(&mousefifo, 128, fifobuf);
 }
 
 int mouse_decode(MouseDec* mdec, uchar dat) {
@@ -51,4 +64,24 @@ int mouse_decode(MouseDec* mdec, uchar dat) {
         return 1;
     }
     return -1;
+}
+
+void mouse_move(MouseInfo* minfo, int dx, int dy) {
+    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
+    
+    minfo->x += dx;
+    minfo->y += dy;
+
+    if (minfo->x < 0) {
+        minfo->x = 0;
+    }
+    if (minfo->y < 0) {
+        minfo->y = 0;
+    }
+    if (minfo->x > binfo->width - 16) {
+        minfo->x = binfo->width - 16;
+    }
+    if (minfo->y > binfo->height - 16) {
+        minfo->y = binfo->height - 16;
+    }
 }

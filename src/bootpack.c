@@ -6,36 +6,21 @@ extern FIFO keyfifo;
 extern FIFO mousefifo;
 
 void tmos_main(void) {
+    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
+
     init_gdtidt();
+
     init_pic();
-
-    // enable interrupt
-    io_sti();
-
-    uchar keybuf[32];
-    fifo_init(&keyfifo, 32, (uchar*) keybuf);
-
-    uchar mousebuf[128];
-    fifo_init(&mousefifo, 128, (uchar*) mousebuf);
-
-    io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
-    io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
 
     init_keyboard();
 
     init_palette();
 
-    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
     init_screen(binfo->vram, binfo->width, binfo->height);
 
-    // mouse
-    char mcursor[256];
-    init_mouse_cursor8(mcursor, COL8_008484);
-    int mx = (binfo->width - 16) / 2;
-    int my = (binfo->height - 28 - 16) / 2;
-    putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
+    MouseInfo minfo;
     MouseDec mdec;
-    enable_mouse(&mdec);
+    init_mouse(&minfo, &mdec);
 
     // memory
     {
@@ -47,7 +32,8 @@ void tmos_main(void) {
         memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
         char membuf[40];
-        sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
+        sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024),
+                memman_total_free_size(memman) / 1024);
         putstring8(binfo->vram, binfo->width, 4, 32, COL8_FFFFFF, membuf);
     }
 
@@ -81,26 +67,12 @@ void tmos_main(void) {
                 putstring8(binfo->vram, binfo->width, 32, 16, COL8_FFFFFF, s);
 
                 // hidden mouse
-                draw_rec(binfo->vram, binfo->width, COL8_008484, mx, my, mx + 15, my + 15);
+                draw_rec(binfo->vram, binfo->width, COL8_008484, minfo.x, minfo.y, minfo.x + 15, minfo.y + 15);
 
-                mx += mdec.x;
-                my += mdec.y;
+                mouse_move(&minfo, mdec.x, mdec.y);
 
-                if (mx < 0) {
-                    mx = 0;
-                }
-                if (my < 0) {
-                    my = 0;
-                }
-                if (mx > binfo->width - 16) {
-                    mx = binfo->width - 16;
-                }
-                if (my > binfo->height - 16) {
-                    my = binfo->height - 16;
-                }
-                
                 // draw mouse
-                putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
+                putblock8_8(binfo->vram, binfo->width, 16, 16, minfo.x, minfo.y, minfo.image, 16);
             }
         } else {
             io_stihlt();

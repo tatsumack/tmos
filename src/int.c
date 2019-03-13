@@ -18,13 +18,15 @@ void init_pic(void) {
     io_out8(PIC1_ICW4, 0x01  );
 
     // enable interrupts
-    io_out8(PIC0_IMR,  0xfb  ); // 11111011 enable PIC1 only
-    io_out8(PIC1_IMR,  0xff  ); // 11111111 disable all interrupts
+    io_sti();
+
+    io_out8(PIC0_IMR, 0xf9); // enable keyboard interrupt and PIC1
+    io_out8(PIC1_IMR, 0xef); // enable mouse interrupt
 }
 
 #define PORT_KEYDAT 0x0060
 
-FIFO keyfifo;
+extern FIFO keyfifo;
 
 // interrupted by keyboard
 void inthandler21(int *esp) {
@@ -34,7 +36,7 @@ void inthandler21(int *esp) {
     fifo_put(&keyfifo, data);
 }
 
-FIFO mousefifo;
+extern FIFO mousefifo;
 
 // interrupted by mouse
 void inthandler2c(int *esp) {
