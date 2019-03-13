@@ -53,6 +53,10 @@ int io_load_eflags(void);
 
 void io_store_eflags(int eflags);
 
+int load_cr0(void);
+
+void store_cr0(int cr0);
+
 void load_gdtr(int limit, int addr);
 
 void load_idtr(int limit, int addr);
@@ -62,6 +66,8 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 
 void asm_inthandler2c(void);
+
+int asm_memtest(int start, int end);
 
 // fifo.c
 typedef struct FIFO {
@@ -159,3 +165,8 @@ int mouse_decode(MouseDec* mdec, unsigned char dat);
 #define KEYCMD_SENDTO_MOUSE        0xd4
 #define MOUSECMD_ENABLE            0xf4
 
+// memory.c
+#define EFLAGS_AC_BIT       0x00040000
+#define CR0_CACHE_DISABLE   0x60000000
+
+unsigned int memtest(unsigned int start, unsigned int end);

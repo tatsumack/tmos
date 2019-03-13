@@ -34,8 +34,12 @@ void tmos_main(void) {
     int my = (binfo->height - 28 - 16) / 2;
     putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
 
-    putstring8(binfo->vram, binfo->width, 31, 31, COL8_000000, "TMOS");
-    putstring8(binfo->vram, binfo->width, 30, 30, COL8_FFFFFF, "TMOS");
+    // memory test
+    unsigned char membuf[40];
+    int res = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
+    sprintf(membuf, "memory %dMB", res);
+    putstring8(binfo->vram, binfo->width, 4, 32, COL8_FFFFFF, membuf);
+
 
     MouseDec mdec;
     enable_mouse(&mdec);
