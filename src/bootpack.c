@@ -28,21 +28,28 @@ void tmos_main(void) {
     BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
     init_screen(binfo->vram, binfo->width, binfo->height);
 
+    // mouse
     char mcursor[256];
     init_mouse_cursor8(mcursor, COL8_008484);
     int mx = (binfo->width - 16) / 2;
     int my = (binfo->height - 28 - 16) / 2;
     putblock8_8(binfo->vram, binfo->width, 16, 16, mx, my, mcursor, 16);
-
-    // memory test
-    uchar membuf[40];
-    int res = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-    sprintf(membuf, "memory %dMB", res);
-    putstring8(binfo->vram, binfo->width, 4, 32, COL8_FFFFFF, membuf);
-
-
     MouseDec mdec;
     enable_mouse(&mdec);
+
+    // memory
+    {
+        uint memtotal = memtest(0x00400000, 0xbfffffff);
+
+        MemoryManager* memman = (MemoryManager*) ADR_MEMMAN;
+        memman_init(memman);
+        memman_free(memman, 0x00001000, 0x0009e000);
+        memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
+        char membuf[40];
+        sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
+        putstring8(binfo->vram, binfo->width, 4, 32, COL8_FFFFFF, membuf);
+    }
 
     for (;;) {
         io_cli();

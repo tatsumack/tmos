@@ -18,7 +18,9 @@ typedef unsigned char uchar;
 #define COL8_008484        14
 #define COL8_848484        15
 
-#define ADR_BOOTINFO 0x00000ff0
+#define ADR_BOOTINFO    0x00000ff0
+#define ADR_MEMMAN      0x003c0000
+
 typedef struct BootInfo {
     char cyles, leds, vmode, reserve;
     short width, height;
@@ -170,5 +172,24 @@ int mouse_decode(MouseDec* mdec, uchar dat);
 // memory.c
 #define EFLAGS_AC_BIT       0x00040000
 #define CR0_CACHE_DISABLE   0x60000000
+#define MEMMAN_FREES        4090
+
+typedef struct FreeInfo {
+    uint addr, size;
+} FreeInfo;
+
+typedef struct MemoryManager {
+    int free_num, max_free_num, fail_size, fail_num;
+    FreeInfo free[MEMMAN_FREES];
+} MemoryManager;
 
 uint memtest(uint start, uint end);
+
+void memman_init(MemoryManager* man);
+
+uint memman_total_free_size(MemoryManager* man);
+
+uint memman_alloc(MemoryManager* man, uint size);
+
+int memman_free(MemoryManager* man, uint addr, uint size);
+
