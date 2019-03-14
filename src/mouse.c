@@ -11,11 +11,6 @@ void init_mouse(MouseInfo* minfo, MouseDec* mdec) {
     wait_kbc_sendready();
     io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
 
-    init_mouse_cursor8(minfo->image, COL8_008484);
-    minfo->x = (binfo->width - 16) / 2;
-    minfo->y = (binfo->height - 28 - 16) / 2;
-    putblock8_8(binfo->vram, binfo->width, 16, 16, minfo->x, minfo->y, minfo->image, 16);
-
     mdec->phase = 0;
 
     fifo_init(&mousefifo, 128, fifobuf);

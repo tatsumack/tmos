@@ -204,3 +204,27 @@ int memman_free(MemoryManager* man, uint addr, uint size);
 uint memman_alloc_4k(MemoryManager* man, uint size);
 
 int memman_free_4k(MemoryManager* man, uint addr, uint size);
+
+// sheet.c
+#define MAX_SHEETS 256
+
+typedef struct Sheet {
+    uchar *buf;
+    int width, height, vx, vy, col_inv, zorder, flags;
+} Sheet;
+
+typedef struct SheetManager {
+    uchar *vram;
+    int width, height, top;
+    Sheet sheets[MAX_SHEETS];
+    Sheet* zorders[MAX_SHEETS];
+} SheetManager;
+
+SheetManager* shtman_init(MemoryManager* memman, uchar* vram, int width, int height);
+Sheet* sheet_alloc(SheetManager* shtman);
+void sheet_free(SheetManager* shtman, Sheet* sht);
+void sheet_set_buf(Sheet* sht, uchar* buf, int width, int height, int col_inv);
+void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder);
+void sheet_refresh(SheetManager* shtman);
+void sheet_slide(SheetManager* shtman, Sheet* sht, int vx0, int vy0);
+
