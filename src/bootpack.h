@@ -201,3 +201,6 @@ uint memman_alloc(MemoryManager* man, uint size);
 
 int memman_free(MemoryManager* man, uint addr, uint size);
 
+uint memman_alloc_4k(MemoryManager* man, uint size);
+
+int memman_free_4k(MemoryManager* man, uint addr, uint size);

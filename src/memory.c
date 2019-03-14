@@ -129,3 +129,13 @@ int memman_free(MemoryManager* man, uint addr, uint size) {
     man->fail_size += size;
     return -1;
 }
+
+uint memman_alloc_4k(MemoryManager* man, uint size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memman_alloc(man, size);
+}
+
+int memman_free_4k(MemoryManager* man, uint addr, uint size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memman_free(man, addr, size);
+}
