@@ -1,8 +1,8 @@
+#ifndef TMOC_BOOTPACK_H
+#define TMOC_BOOTPACK_H
+
 typedef unsigned int uint;
 typedef unsigned char uchar;
-
-int min(int a, int b) { return a > b ? b : a; }
-int max(int a, int b) { return a < b ? b : a; }
 
 #define COL8_000000        0
 #define COL8_FF0000        1
@@ -42,6 +42,12 @@ typedef struct GateDescriptor {
     short offset_high;
 } GateDescriptor;
 
+// util.c
+int min(int a, int b);
+
+int max(int a, int b);
+
+int clamp(int x, int a, int b);
 
 // asmfunc.asm
 void io_hlt(void);
@@ -246,3 +252,4 @@ void debug_error(char* s, char* file, int line);
 
 #define TMOC_ERROR(fmt, ...) do { char s[100]; sprintf(s, fmt, __VA_ARGS__); debug_error(s, __FILE__, __LINE__); } while(0)
 
+#endif // TMOC_BOOTPACK_H

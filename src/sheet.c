@@ -101,6 +101,11 @@ void sheet_refresh(SheetManager* shtman, Sheet* sht, int bx0, int by0, int bx1, 
 }
 
 void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1) {
+    vx0 = max(vx0, 0);
+    vy0 = max(vy0, 0);
+    vx1 = min(vx1, shtman->width);
+    vy1 = min(vy1, shtman->height);
+
     for (int i = 0; i <= shtman->top; i++) {
         Sheet* sht = shtman->zorders[i];
 

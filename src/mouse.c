@@ -63,20 +63,10 @@ int mouse_decode(MouseDec* mdec, uchar dat) {
 
 void mouse_move(MouseInfo* minfo, int dx, int dy) {
     BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
-    
+
     minfo->x += dx;
     minfo->y += dy;
 
-    if (minfo->x < 0) {
-        minfo->x = 0;
-    }
-    if (minfo->y < 0) {
-        minfo->y = 0;
-    }
-    if (minfo->x > binfo->width - 16) {
-        minfo->x = binfo->width - 16;
-    }
-    if (minfo->y > binfo->height - 16) {
-        minfo->y = binfo->height - 16;
-    }
+    minfo->x = clamp(minfo->x, 0, binfo->width - 1);
+    minfo->y = clamp(minfo->y, 0, binfo->height - 1);
 }
