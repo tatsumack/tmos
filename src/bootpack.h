@@ -228,3 +228,8 @@ void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder);
 void sheet_refresh(SheetManager* shtman);
 void sheet_slide(SheetManager* shtman, Sheet* sht, int vx0, int vy0);
 
+// debug.c
+void debug_error(char* s, char* file, int line);
+
+#define TMOC_ERROR(fmt, ...) do { char s[100]; sprintf(s, fmt, __VA_ARGS__); debug_error(s, __FILE__, __LINE__); } while(0)
+
