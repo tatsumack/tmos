@@ -1,6 +1,9 @@
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
+int min(int a, int b) { return a > b ? b : a; }
+int max(int a, int b) { return a < b ? b : a; }
+
 #define COL8_000000        0
 #define COL8_FF0000        1
 #define COL8_00FF00        2
@@ -211,23 +214,31 @@ int memman_free_4k(MemoryManager* man, uint addr, uint size);
 #define MAX_SHEETS 256
 
 typedef struct Sheet {
-    uchar *buf;
+    uchar* buf;
     int width, height, vx, vy, col_inv, zorder, flags;
 } Sheet;
 
 typedef struct SheetManager {
-    uchar *vram;
+    uchar* vram;
     int width, height, top;
     Sheet sheets[MAX_SHEETS];
     Sheet* zorders[MAX_SHEETS];
 } SheetManager;
 
 SheetManager* shtman_init(MemoryManager* memman, uchar* vram, int width, int height);
+
 Sheet* sheet_alloc(SheetManager* shtman);
+
 void sheet_free(SheetManager* shtman, Sheet* sht);
+
 void sheet_set_buf(Sheet* sht, uchar* buf, int width, int height, int col_inv);
+
 void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder);
-void sheet_refresh(SheetManager* shtman);
+
+void sheet_refresh(SheetManager* shtman, Sheet* sht, int bx0, int by0, int bx1, int by1);
+
+void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1);
+
 void sheet_slide(SheetManager* shtman, Sheet* sht, int vx0, int vy0);
 
 // debug.c

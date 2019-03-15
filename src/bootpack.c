@@ -83,7 +83,7 @@ void activate(void) {
         putstring8(sht_back->buf, binfo->width, 4, 32, COL8_FFFFFF, membuf);
     }
 
-    sheet_refresh(shtman);
+    sheet_refresh(shtman, sht_back, 0, 0, binfo->width, 48);
 }
 
 void update(void) {
@@ -97,7 +97,7 @@ void update(void) {
         sprintf(s, "%02X", i);
         draw_rec(sht_back->buf, binfo->width, COL8_008484, 0, 16, 15, 31);
         putstring8(sht_back->buf, binfo->width, 0, 16, COL8_FFFFFF, s);
-        sheet_refresh(shtman);
+        sheet_refresh(shtman, sht_back, 0, 16, 16, 32);
     } else if (!fifo_empty(&mousefifo)) {
         int i = fifo_get(&mousefifo);
         io_sti();
@@ -116,6 +116,7 @@ void update(void) {
             }
             draw_rec(sht_back->buf, binfo->width, COL8_008484, 32, 16, 32 + 15 * 8 - 1, 31);
             putstring8(sht_back->buf, binfo->width, 32, 16, COL8_FFFFFF, s);
+            sheet_refresh(shtman, sht_back, 32, 16, 32 + 15 * 8, 32);
 
             mouse_move(&minfo, mdec.x, mdec.y);
 

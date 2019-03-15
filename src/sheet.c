@@ -92,17 +92,27 @@ void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder) {
         shtman->zorders[zorder] = sht;
     }
 
-    sheet_refresh(shtman);
+    sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height);
 }
 
-void sheet_refresh(SheetManager* shtman) {
+void sheet_refresh(SheetManager* shtman, Sheet* sht, int bx0, int by0, int bx1, int by1) {
+    if (sht->height == -1) return;
+    sheet_refresh_sub(shtman, sht->vx + bx0, sht->vy + by0, sht->vx + bx1, sht->vy + by1);
+}
+
+void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1) {
     for (int i = 0; i <= shtman->top; i++) {
         Sheet* sht = shtman->zorders[i];
 
-        for (int by = 0; by < sht->height; by++) {
+        int bx0 = max(vx0 - sht->vx, 0);
+        int by0 = max(vy0 - sht->vy, 0);
+        int bx1 = min(vx1 - sht->vx, sht->width);
+        int by1 = min(vy1 - sht->vy, sht->height);
+
+        for (int by = by0; by < by1; by++) {
             int vy = sht->vy + by;
 
-            for (int bx = 0; bx < sht->width; bx++) {
+            for (int bx = bx0; bx < bx1; bx++) {
                 int vx = sht->vx + bx;
                 uchar c = sht->buf[by * sht->width + bx];
 
@@ -112,13 +122,17 @@ void sheet_refresh(SheetManager* shtman) {
             }
         }
     }
+
 }
 
 void sheet_slide(SheetManager* shtman, Sheet* sht, int vx, int vy) {
+    int oldx = sht->vx;
+    int oldy = sht->vy;
     sht->vx = vx;
     sht->vy = vy;
     if (sht->zorder != -1) {
-        sheet_refresh(shtman);
+        sheet_refresh_sub(shtman, oldx, oldy, oldx + sht->width, oldy + sht->height);
+        sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height);
     }
 }
 
