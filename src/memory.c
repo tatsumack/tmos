@@ -1,6 +1,15 @@
 #include "bootpack.h"
 
+extern MemoryManager* memman;
+
 int is_486(void);
+
+void init_memory() {
+    uint memtotal = memtest(0x00400000, 0xbfffffff);
+    memman_init(memman);
+    memman_free(memman, 0x00001000, 0x0009e000);
+    memman_free(memman, 0x00400000, memtotal - 0x00400000);
+}
 
 uint memtest(uint start, uint end) {
     int is486 = is_486();

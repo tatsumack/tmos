@@ -191,6 +191,8 @@ typedef struct MemoryManager {
     FreeInfo free[MEMMAN_FREES];
 } MemoryManager;
 
+void init_memory();
+
 uint memtest(uint start, uint end);
 
 void memman_init(MemoryManager* man);

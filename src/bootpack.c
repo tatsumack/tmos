@@ -41,13 +41,10 @@ void init(void) {
 
     init_mouse(&minfo, &mdec);
 
+    init_memory();
 }
 
 void activate(void) {
-    uint memtotal = memtest(0x00400000, 0xbfffffff);
-    memman_init(memman);
-    memman_free(memman, 0x00001000, 0x0009e000);
-    memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
     shtman = shtman_init(memman, binfo->vram, binfo->width, binfo->height);
 
