@@ -227,6 +227,7 @@ typedef struct Sheet {
 
 typedef struct SheetManager {
     char* vram;
+    char* map;
     int width, height, top;
     Sheet sheets[MAX_SHEETS];
     Sheet* zorders[MAX_SHEETS];
@@ -244,12 +245,14 @@ void sheet_updown(Sheet* sht, int zorder);
 
 void sheet_refresh(Sheet* sht, int bx0, int by0, int bx1, int by1);
 
-void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1);
+void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1, int zorder0, int zorder1);
+
+void sheet_refresh_map(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1, int zorder);
 
 void sheet_slide(Sheet* sht, int vx0, int vy0);
 
 // window.c
-void make_window(uchar *buf, int width, int height, char *title);
+void make_window(uchar* buf, int width, int height, char* title);
 
 // debug.c
 void debug_error(char* s, char* file, int line);
