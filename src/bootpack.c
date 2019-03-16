@@ -15,11 +15,15 @@ Sheet* sht_back;
 Sheet* sht_win;
 Sheet* sht_mouse;
 
+uint counter = 0;
+
 void init(void);
 
 void activate(void);
 
 void update(void);
+
+void update_counter(void);
 
 void tmos_main(void) {
     init();
@@ -67,13 +71,12 @@ void activate(void) {
         if (!sht_win) {
             TMOC_ERROR("failed to allocate sht_win");
         }
-        uchar* buf_win = (uchar*) memman_alloc_4k(memman, 160 * 68);
+        uchar* buf_win = (uchar*) memman_alloc_4k(memman, 160 * 52);
         if (!buf_win) {
             TMOC_ERROR("failed to allocate buf_win");
         }
-        sheet_set_buf(sht_win, buf_win, 160, 68, -1);
-        make_window(buf_win, 160, 68, "window");
-        putstring8(buf_win, 160, 14, 28, COL8_000000, "Welcome to TMOS!");
+        sheet_set_buf(sht_win, buf_win, 160, 52, -1);
+        make_window(buf_win, 160, 52, "counter");
         sheet_slide(sht_win, 80, 72);
         sheet_updown(sht_win, 1);
     }
@@ -105,6 +108,8 @@ void activate(void) {
 }
 
 void update(void) {
+    update_counter();
+
     io_cli();
 
     if (!fifo_empty(&keyfifo)) {
@@ -142,7 +147,16 @@ void update(void) {
             sheet_slide(sht_mouse, minfo.x, minfo.y);
         }
     } else {
-        io_stihlt();
+        io_sti();
     }
+}
+
+void update_counter(void) {
+    counter++;
+    char buf_counter[20];
+    sprintf(buf_counter,"%010d", counter);
+    draw_rec(sht_win->buf, 160, COL8_C6C6C6, 40, 28, 119, 43);
+    putstring8(sht_win->buf, 160, 40, 28, COL8_000000, buf_counter);
+    sheet_refresh(sht_win, 40, 28, 120, 44);
 }
 
