@@ -248,9 +248,12 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1)
 
 void sheet_slide(Sheet* sht, int vx0, int vy0);
 
+// window.c
+void make_window(uchar *buf, int width, int height, char *title);
+
 // debug.c
 void debug_error(char* s, char* file, int line);
 
-#define TMOC_ERROR(fmt, ...) do { char s[100]; sprintf(s, fmt, __VA_ARGS__); debug_error(s, __FILE__, __LINE__); } while(0)
+#define TMOC_ERROR(...) do { char error_buf[100]; sprintf(error_buf, __VA_ARGS__); debug_error(error_buf, __FILE__, __LINE__); } while(0)
 
 #endif // TMOC_BOOTPACK_H

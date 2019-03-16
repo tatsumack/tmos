@@ -12,6 +12,7 @@ MemoryManager* memman = (MemoryManager*) ADR_MEMMAN;
 
 SheetManager* shtman;
 Sheet* sht_back;
+Sheet* sht_win;
 Sheet* sht_mouse;
 
 void init(void);
@@ -60,6 +61,23 @@ void activate(void) {
         sheet_updown(sht_back, 0);
     }
 
+    // window
+    {
+        sht_win = sheet_alloc(shtman);
+        if (!sht_win) {
+            TMOC_ERROR("failed to allocate sht_win");
+        }
+        uchar* buf_win = (uchar*) memman_alloc_4k(memman, 160 * 68);
+        if (!buf_win) {
+            TMOC_ERROR("failed to allocate buf_win");
+        }
+        sheet_set_buf(sht_win, buf_win, 160, 68, -1);
+        make_window(buf_win, 160, 68, "window");
+        putstring8(buf_win, 160, 14, 28, COL8_000000, "Welcome to TMOS!");
+        sheet_slide(sht_win, 80, 72);
+        sheet_updown(sht_win, 1);
+    }
+
     // mouse
     {
         sht_mouse = sheet_alloc(shtman);
@@ -71,7 +89,7 @@ void activate(void) {
         minfo.y = (binfo->height - 28 - 16) / 2;
 
         sheet_slide(sht_mouse, minfo.x, minfo.y);
-        sheet_updown(sht_mouse, 1);
+        sheet_updown(sht_mouse, 2);
     }
 
     // memory info
