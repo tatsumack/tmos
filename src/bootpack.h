@@ -259,11 +259,18 @@ void make_window(uchar* buf, int width, int height, char* title);
 // timer.c
 typedef struct TimerManager {
     uint count;
+    uint timeout;
+    FIFO* fifo;
+    uchar data;
 } TimerManager;
 
 void init_pit(void);
 
+void init_timer(void);
+
 void inthandler20(int* esp);
+
+void settimer(uint timeout, FIFO* fifo, uchar data);
 
 // debug.c
 void debug_error(char* s, char* file, int line);

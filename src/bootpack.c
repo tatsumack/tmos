@@ -4,6 +4,7 @@
 
 extern FIFO keyfifo;
 extern FIFO mousefifo;
+extern FIFO timerfifo;
 extern TimerManager timerman;
 
 MouseInfo minfo;
@@ -45,11 +46,19 @@ void init(void) {
 
     init_mouse(&minfo, &mdec);
 
+    init_timer();
+
     init_memory();
 }
 
 void activate(void) {
     shtman = shtman_init(memman, binfo->vram, binfo->width, binfo->height);
+
+    // timer
+    {
+        // 10sec timer
+        settimer(1000, &timerfifo, 1);
+    }
 
     // backgrounds
     {
@@ -143,6 +152,11 @@ void update(void) {
             // draw mouse
             sheet_slide(sht_mouse, minfo.x, minfo.y);
         }
+    } else if (!fifo_empty(&timerfifo)) {
+        int i = fifo_get(&timerfifo);
+        io_sti();
+        putstring8(sht_back->buf, binfo->width, 0, 64, COL8_FFFFFF, "10 sec");
+        sheet_refresh(sht_back, 0, 64, 56, 80);
     } else {
         io_sti();
     }
