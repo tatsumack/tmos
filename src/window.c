@@ -1,22 +1,9 @@
 #include "bootpack.h"
 
 void make_window(uchar* buf, int width, int height, char* title) {
-    static char closebtn[14][16] = {
-            "OOOOOOOOOOOOOOO@",
-            "OQQQQQQQQQQQQQ$@",
-            "OQQQQQQQQQQQQQ$@",
-            "OQQQ@@QQQQ@@QQ$@",
-            "OQQQQ@@QQ@@QQQ$@",
-            "OQQQQQ@@@@QQQQ$@",
-            "OQQQQQQ@@QQQQQ$@",
-            "OQQQQQ@@@@QQQQ$@",
-            "OQQQQ@@QQ@@QQQ$@",
-            "OQQQ@@QQQQ@@QQ$@",
-            "OQQQQQQQQQQQQQ$@",
-            "OQQQQQQQQQQQQQ$@",
-            "O$$$$$$$$$$$$$$@",
-            "@@@@@@@@@@@@@@@@"
-    };
+    static char closebtn[14][16] = {"OOOOOOOOOOOOOOO@", "OQQQQQQQQQQQQQ$@", "OQQQQQQQQQQQQQ$@", "OQQQ@@QQQQ@@QQ$@", "OQQQQ@@QQ@@QQQ$@",
+                                    "OQQQQQ@@@@QQQQ$@", "OQQQQQQ@@QQQQQ$@", "OQQQQQ@@@@QQQQ$@", "OQQQQ@@QQ@@QQQ$@", "OQQQ@@QQQQ@@QQ$@",
+                                    "OQQQQQQQQQQQQQ$@", "OQQQQQQQQQQQQQ$@", "O$$$$$$$$$$$$$$@", "@@@@@@@@@@@@@@@@"};
     draw_rec(buf, width, COL8_C6C6C6, 0, 0, width - 1, 0);
     draw_rec(buf, width, COL8_FFFFFF, 1, 1, width - 2, 1);
     draw_rec(buf, width, COL8_C6C6C6, 0, 0, 0, height - 1);

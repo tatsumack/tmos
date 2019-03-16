@@ -4,13 +4,13 @@
 #define SHEET_USE 1
 
 SheetManager* shtman_init(MemoryManager* memman, char* vram, int width, int height) {
-    SheetManager* shtman = (SheetManager*) memman_alloc_4k(memman, sizeof(SheetManager));
+    SheetManager* shtman = (SheetManager*)memman_alloc_4k(memman, sizeof(SheetManager));
     if (!shtman) {
         TMOC_ERROR("failed to allocate SheetManager");
         return NULL;
     }
 
-    shtman->map = (char*) memman_alloc_4k(memman, width * height);
+    shtman->map = (char*)memman_alloc_4k(memman, width * height);
     if (!shtman->map) {
         TMOC_ERROR("failed to allocate sht->map");
         return NULL;
@@ -113,7 +113,6 @@ void sheet_updown(Sheet* sht, int zorder) {
             sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height, sht->zorder, sht->zorder);
         }
     }
-
 }
 
 void sheet_refresh(Sheet* sht, int bx0, int by0, int bx1, int by1) {
@@ -129,7 +128,7 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
 
     for (int i = max(zorder0, 0); i <= min(zorder1, shtman->top); i++) {
         Sheet* sht = shtman->zorders[i];
-        uchar sid = (uchar) (sht - shtman->sheets);
+        uchar sid = (uchar)(sht - shtman->sheets);
 
         int bx0 = max(vx0 - sht->vx, 0);
         int by0 = max(vy0 - sht->vy, 0);
@@ -149,7 +148,6 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
             }
         }
     }
-
 }
 
 void sheet_refresh_map(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1, int zorder) {
@@ -160,7 +158,7 @@ void sheet_refresh_map(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
 
     for (int i = max(zorder, 0); i <= shtman->top; i++) {
         Sheet* sht = shtman->zorders[i];
-        uchar sid = (uchar) (sht - shtman->sheets);
+        uchar sid = (uchar)(sht - shtman->sheets);
 
         int bx0 = max(vx0 - sht->vx, 0);
         int by0 = max(vy0 - sht->vy, 0);
@@ -179,7 +177,6 @@ void sheet_refresh_map(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
             }
         }
     }
-
 }
 
 void sheet_slide(Sheet* sht, int vx, int vy) {
@@ -203,9 +200,3 @@ void sheet_free(Sheet* sht) {
     sht->flags = 0;
     sht->man = NULL;
 }
-
-
-
-
-
-

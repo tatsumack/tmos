@@ -2,22 +2,22 @@
 
 void init_palette(void) {
     static uchar table_rgb[16 * 3] = {
-            0x00, 0x00, 0x00,    /*  0:Black */
-            0xff, 0x00, 0x00,    /*  1:Red */
-            0x00, 0xff, 0x00,    /*  2:Green */
-            0xff, 0xff, 0x00,    /*  3:Yellow */
-            0x00, 0x00, 0xff,    /*  4:Blue */
-            0xff, 0x00, 0xff,    /*  5:Purple */
-            0x00, 0xff, 0xff,    /*  6:Cyan */
-            0xff, 0xff, 0xff,    /*  7:White */
-            0xc6, 0xc6, 0xc6,    /*  8:Gray */
-            0x84, 0x00, 0x00,    /*  9:Dark Red */
-            0x00, 0x84, 0x00,    /* 10:Dark Green */
-            0x84, 0x84, 0x00,    /* 11:Dark Yellow */
-            0x00, 0x00, 0x84,    /* 12:Dark Blue */
-            0x84, 0x00, 0x84,    /* 13:Dark Purple */
-            0x00, 0x84, 0x84,    /* 14:Dark Cyan */
-            0x84, 0x84, 0x84     /* 15:Dark Gray */
+        0x00, 0x00, 0x00, /*  0:Black */
+        0xff, 0x00, 0x00, /*  1:Red */
+        0x00, 0xff, 0x00, /*  2:Green */
+        0xff, 0xff, 0x00, /*  3:Yellow */
+        0x00, 0x00, 0xff, /*  4:Blue */
+        0xff, 0x00, 0xff, /*  5:Purple */
+        0x00, 0xff, 0xff, /*  6:Cyan */
+        0xff, 0xff, 0xff, /*  7:White */
+        0xc6, 0xc6, 0xc6, /*  8:Gray */
+        0x84, 0x00, 0x00, /*  9:Dark Red */
+        0x00, 0x84, 0x00, /* 10:Dark Green */
+        0x84, 0x84, 0x00, /* 11:Dark Yellow */
+        0x00, 0x00, 0x84, /* 12:Dark Blue */
+        0x84, 0x00, 0x84, /* 13:Dark Purple */
+        0x00, 0x84, 0x84, /* 14:Dark Cyan */
+        0x84, 0x84, 0x84  /* 15:Dark Gray */
     };
     set_palette(table_rgb, 16);
 }
@@ -56,8 +56,7 @@ void init_screen(char* vram, int width, int height) {
 
 void draw_rec(char* vram, int width, uchar c, int x0, int y0, int x1, int y1) {
     for (int y = y0; y <= y1; y++) {
-        for (int x = x0; x <= x1; x++)
-            vram[y * width + x] = c;
+        for (int x = x0; x <= x1; x++) vram[y * width + x] = c;
     }
 }
 
@@ -74,7 +73,7 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font) {
     }
 }
 
-void putstring8(char* vram, int width, int x, int y, char color, char *s) {
+void putstring8(char* vram, int width, int x, int y, char color, char* s) {
     extern char ascii_fonts[4096];
     while (*s != 0x00) {
         putfont8(vram, width, x, y, color, ascii_fonts + *s * 16);
@@ -84,24 +83,9 @@ void putstring8(char* vram, int width, int x, int y, char color, char *s) {
 }
 
 void init_mouse_cursor8(char* mouse, char bc) {
-    static char cursor[16][16] = {
-            "**************..",
-            "*OOOOOOOOOOO*...",
-            "*OOOOOOOOOO*....",
-            "*OOOOOOOOO*.....",
-            "*OOOOOOOO*......",
-            "*OOOOOOO*.......",
-            "*OOOOOOO*.......",
-            "*OOOOOOOO*......",
-            "*OOOO**OOO*.....",
-            "*OOO*..*OOO*....",
-            "*OO*....*OOO*...",
-            "*O*......*OOO*..",
-            "**........*OOO*.",
-            "*..........*OOO*",
-            "............*OO*",
-            ".............***"
-    };
+    static char cursor[16][16] = {"**************..", "*OOOOOOOOOOO*...", "*OOOOOOOOOO*....", "*OOOOOOOOO*.....", "*OOOOOOOO*......", "*OOOOOOO*.......",
+                                  "*OOOOOOO*.......", "*OOOOOOOO*......", "*OOOO**OOO*.....", "*OOO*..*OOO*....", "*OO*....*OOO*...", "*O*......*OOO*..",
+                                  "**........*OOO*.", "*..........*OOO*", "............*OO*", ".............***"};
     int x, y;
 
     for (y = 0; y < 16; y++) {

@@ -7,8 +7,8 @@ extern FIFO mousefifo;
 
 MouseInfo minfo;
 MouseDec mdec;
-BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
-MemoryManager* memman = (MemoryManager*) ADR_MEMMAN;
+BootInfo* binfo = (BootInfo*)ADR_BOOTINFO;
+MemoryManager* memman = (MemoryManager*)ADR_MEMMAN;
 
 SheetManager* shtman;
 Sheet* sht_back;
@@ -50,13 +50,12 @@ void init(void) {
 }
 
 void activate(void) {
-
     shtman = shtman_init(memman, binfo->vram, binfo->width, binfo->height);
 
     // backgrounds
     {
         sht_back = sheet_alloc(shtman);
-        uchar* buf_back = (uchar*) memman_alloc_4k(memman, (uint) (binfo->width * binfo->height));
+        uchar* buf_back = (uchar*)memman_alloc_4k(memman, (uint)(binfo->width * binfo->height));
         sheet_set_buf(sht_back, buf_back, binfo->width, binfo->height, -1);
 
         init_screen(buf_back, binfo->width, binfo->height);
@@ -71,7 +70,7 @@ void activate(void) {
         if (!sht_win) {
             TMOC_ERROR("failed to allocate sht_win");
         }
-        uchar* buf_win = (uchar*) memman_alloc_4k(memman, 160 * 52);
+        uchar* buf_win = (uchar*)memman_alloc_4k(memman, 160 * 52);
         if (!buf_win) {
             TMOC_ERROR("failed to allocate buf_win");
         }
@@ -84,7 +83,7 @@ void activate(void) {
     // mouse
     {
         sht_mouse = sheet_alloc(shtman);
-        uchar* buf_mouse = (uchar*) memman_alloc(memman, 256);
+        uchar* buf_mouse = (uchar*)memman_alloc(memman, 256);
         sheet_set_buf(sht_mouse, buf_mouse, 16, 16, 99);
 
         init_mouse_cursor8(buf_mouse, 99);
@@ -99,8 +98,7 @@ void activate(void) {
     {
         uint memtotal = memtest(0x00400000, 0xbfffffff);
         char membuf[40];
-        sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024),
-                memman_total_free_size(memman) / 1024);
+        sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
         putstring8(sht_back->buf, binfo->width, 4, 32, COL8_FFFFFF, membuf);
     }
 
@@ -154,9 +152,8 @@ void update(void) {
 void update_counter(void) {
     counter++;
     char buf_counter[20];
-    sprintf(buf_counter,"%010d", counter);
+    sprintf(buf_counter, "%010d", counter);
     draw_rec(sht_win->buf, 160, COL8_C6C6C6, 40, 28, 119, 43);
     putstring8(sht_win->buf, 160, 40, 28, COL8_000000, buf_counter);
     sheet_refresh(sht_win, 40, 28, 120, 44);
 }
-

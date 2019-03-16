@@ -4,7 +4,7 @@ FIFO mousefifo;
 uchar fifobuf[MOUSE_FIFOBUF];
 
 void init_mouse(MouseInfo* minfo, MouseDec* mdec) {
-    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
+    BootInfo* binfo = (BootInfo*)ADR_BOOTINFO;
 
     wait_kbc_sendready();
     io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
@@ -26,7 +26,7 @@ int mouse_decode(MouseDec* mdec, uchar dat) {
     }
     if (mdec->phase == 1) {
         // 1st byte
-        if ((dat & 0xc8) == 0x08) { // validation
+        if ((dat & 0xc8) == 0x08) {  // validation
             mdec->buf[0] = dat;
             mdec->phase = 2;
         }
@@ -62,7 +62,7 @@ int mouse_decode(MouseDec* mdec, uchar dat) {
 }
 
 void mouse_move(MouseInfo* minfo, int dx, int dy) {
-    BootInfo* binfo = (BootInfo*) ADR_BOOTINFO;
+    BootInfo* binfo = (BootInfo*)ADR_BOOTINFO;
 
     minfo->x += dx;
     minfo->y += dy;

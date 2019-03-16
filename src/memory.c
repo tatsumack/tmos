@@ -15,7 +15,7 @@ uint memtest(uint start, uint end) {
     int is486 = is_486();
 
     if (is486) {
-        uint cr0 = (uint) load_cr0();
+        uint cr0 = (uint)load_cr0();
         cr0 |= CR0_CACHE_DISABLE;
         store_cr0(cr0);
     }
@@ -23,20 +23,20 @@ uint memtest(uint start, uint end) {
     int result = asm_memtest(start, end);
 
     if (is486) {
-        uint cr0 = (uint) load_cr0();
+        uint cr0 = (uint)load_cr0();
         cr0 |= CR0_CACHE_DISABLE;
         store_cr0(cr0);
     }
 
-    return (uint) result;
+    return (uint)result;
 }
 
 int is_486() {
-    uint eflags = (uint) io_load_eflags();
+    uint eflags = (uint)io_load_eflags();
     eflags |= EFLAGS_AC_BIT;
     io_store_eflags(eflags);
 
-    eflags = (uint) io_load_eflags();
+    eflags = (uint)io_load_eflags();
 
     int result = 0;
     if ((eflags & EFLAGS_AC_BIT) != 0) {
@@ -107,7 +107,6 @@ int memman_free(MemoryManager* man, uint addr, uint size) {
                     man->free[i] = man->free[i + 1];
                 }
             }
-
         }
         return 0;
     }

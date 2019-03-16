@@ -19,4 +19,3 @@ void init_keyboard(void) {
 
     fifo_init(&keyfifo, 32, fifobuf);
 }
-

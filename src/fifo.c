@@ -40,6 +40,4 @@ int fifo_get(FIFO* fifo) {
     return data;
 }
 
-int fifo_empty(FIFO* fifo) {
-    return fifo->size == fifo->free;
-}
+int fifo_empty(FIFO* fifo) { return fifo->size == fifo->free; }
