@@ -74,6 +74,8 @@ void load_gdtr(int limit, int addr);
 
 void load_idtr(int limit, int addr);
 
+void asm_inthandler20(void);
+
 void asm_inthandler21(void);
 
 void asm_inthandler27(void);
@@ -253,6 +255,15 @@ void sheet_slide(Sheet* sht, int vx0, int vy0);
 
 // window.c
 void make_window(uchar* buf, int width, int height, char* title);
+
+// timer.c
+typedef struct TimerManager {
+    uint count;
+} TimerManager;
+
+void init_pit(void);
+
+void inthandler20(int* esp);
 
 // debug.c
 void debug_error(char* s, char* file, int line);

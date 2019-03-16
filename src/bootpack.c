@@ -4,6 +4,7 @@
 
 extern FIFO keyfifo;
 extern FIFO mousefifo;
+extern TimerManager timerman;
 
 MouseInfo minfo;
 MouseDec mdec;
@@ -14,8 +15,6 @@ SheetManager* shtman;
 Sheet* sht_back;
 Sheet* sht_win;
 Sheet* sht_mouse;
-
-uint counter = 0;
 
 void init(void);
 
@@ -150,9 +149,8 @@ void update(void) {
 }
 
 void update_counter(void) {
-    counter++;
     char buf_counter[20];
-    sprintf(buf_counter, "%010d", counter);
+    sprintf(buf_counter, "%010d", timerman.count);
     draw_rec(sht_win->buf, 160, COL8_C6C6C6, 40, 28, 119, 43);
     putstring8(sht_win->buf, 160, 40, 28, COL8_000000, buf_counter);
     sheet_refresh(sht_win, 40, 28, 120, 44);

@@ -14,11 +14,13 @@
     GLOBAL store_cr0;
     GLOBAL load_gdtr
     GLOBAL load_idtr
+    GLOBAL asm_inthandler20
     GLOBAL asm_inthandler21
     GLOBAL asm_inthandler27
     GLOBAL asm_inthandler2c
     GLOBAL asm_memtest
 
+    EXTERN inthandler20
     EXTERN inthandler21
     EXTERN inthandler27
     EXTERN inthandler2c
@@ -85,6 +87,22 @@ load_idtr: ; void load_idtr(int limit, int addr);
     MOV     [ESP+6], AX
     LIDT    [ESP+6]
     RET
+
+asm_inthandler20:
+    PUSH	ES
+    PUSH	DS
+    PUSHAD
+    MOV		EAX,ESP
+    PUSH	EAX
+    MOV		AX,SS
+    MOV		DS,AX
+    MOV		ES,AX
+    CALL	inthandler20
+    POP		EAX
+    POPAD
+    POP		DS
+    POP		ES
+    IRETD
 
 asm_inthandler21:
     PUSH	ES

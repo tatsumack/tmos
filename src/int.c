@@ -7,20 +7,23 @@ void init_pic(void) {
 
     // settings for PIC0
     io_out8(PIC0_ICW1, 0x11);
-    io_out8(PIC0_ICW2, 0x20);    /* IRQ0-7 map INT20-27 */
+    io_out8(PIC0_ICW2, 0x20);    // IRQ0-7 map INT20-27
     io_out8(PIC0_ICW3, 1 << 2);  // connect PIC1 through IRQ2
     io_out8(PIC0_ICW4, 0x01);
 
     // settings for PIC1
     io_out8(PIC1_ICW1, 0x11);
-    io_out8(PIC1_ICW2, 0x28); /* IRQ8-15 map INT28-2f */
-    io_out8(PIC1_ICW3, 2);    // connect PIC1 through IRQ2
+    io_out8(PIC1_ICW2, 0x28);  // IRQ8-15 map INT28-2f
+    io_out8(PIC1_ICW3, 2);     // connect PIC1 through IRQ2
     io_out8(PIC1_ICW4, 0x01);
 
     // enable interrupts
     io_sti();
 
-    io_out8(PIC0_IMR, 0xf9);  // enable keyboard interrupt and PIC1
+    // enable interval timer
+    init_pit();
+
+    io_out8(PIC0_IMR, 0xf8);  // enable keyboard interrupt, PIT and PIC1
     io_out8(PIC1_IMR, 0xef);  // enable mouse interrupt
 }
 
