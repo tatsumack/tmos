@@ -74,7 +74,7 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font) {
     }
 }
 
-void putstring8(char* vram, int width, int x, int y, char color, uchar* s) {
+void putstring8(char* vram, int width, int x, int y, char color, char *s) {
     extern char ascii_fonts[4096];
     while (*s != 0x00) {
         putfont8(vram, width, x, y, color, ascii_fonts + *s * 16);

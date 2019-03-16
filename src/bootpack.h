@@ -109,7 +109,7 @@ void draw_rec(char* vram, int width, uchar c, int x0, int y0, int x1, int y1);
 
 void putfont8(char* vram, int width, int x, int y, char color, char* font);
 
-void putstring8(char* vram, int width, int x, int y, char color, uchar* s);
+void putstring8(char* vram, int width, int x, int y, char color, char* s);
 
 void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth);
 
