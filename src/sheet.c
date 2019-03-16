@@ -3,9 +3,10 @@
 
 #define SHEET_USE 1
 
-SheetManager* shtman_init(MemoryManager* memman, uchar* vram, int width, int height) {
+SheetManager* shtman_init(MemoryManager* memman, char *vram, int width, int height) {
     SheetManager* shtman = (SheetManager*) memman_alloc_4k(memman, sizeof(SheetManager));
     if (!shtman) {
+        TMOC_ERROR("failed to allocate SheetManager");
         return NULL;
     }
 

@@ -220,19 +220,19 @@ int memman_free_4k(MemoryManager* man, uint addr, uint size);
 #define MAX_SHEETS 256
 
 typedef struct Sheet {
-    uchar* buf;
+    char* buf;
     int width, height, vx, vy, col_inv, zorder, flags;
     struct SheetManager* man;
 } Sheet;
 
 typedef struct SheetManager {
-    uchar* vram;
+    char* vram;
     int width, height, top;
     Sheet sheets[MAX_SHEETS];
     Sheet* zorders[MAX_SHEETS];
 } SheetManager;
 
-SheetManager* shtman_init(MemoryManager* memman, uchar* vram, int width, int height);
+SheetManager* shtman_init(MemoryManager* memman, char* vram, int width, int height);
 
 Sheet* sheet_alloc(SheetManager* shtman);
 
