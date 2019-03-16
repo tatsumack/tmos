@@ -200,3 +200,9 @@ void sheet_free(Sheet* sht) {
     sht->flags = 0;
     sht->man = NULL;
 }
+
+void sheet_putstring(Sheet* sht, int x, int y, int c, int bg, char* s, int len) {
+    draw_rec(sht->buf, sht->width, bg, x, y, x + len * 8 - 1, y + 15);
+    putstring(sht->buf, sht->width, x, y, c, s);
+    sheet_refresh(sht, x, y, x + len * 8, y + 16);
+}

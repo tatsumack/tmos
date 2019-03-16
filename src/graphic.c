@@ -73,7 +73,7 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font) {
     }
 }
 
-void putstring8(char* vram, int width, int x, int y, char color, char* s) {
+void putstring(char* vram, int width, int x, int y, char color, char* s) {
     extern char ascii_fonts[4096];
     while (*s != 0x00) {
         putfont8(vram, width, x, y, color, ascii_fonts + *s * 16);
@@ -99,14 +99,6 @@ void init_mouse_cursor8(char* mouse, char bc) {
             if (cursor[y][x] == '.') {
                 mouse[y * 16 + x] = bc;
             }
-        }
-    }
-}
-
-void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth) {
-    for (int y = 0; y < pheight; y++) {
-        for (int x = 0; x < pwidth; x++) {
-            vram[(py0 + y) * width + (px0 + x)] = buf[y * bwidth + x];
         }
     }
 }

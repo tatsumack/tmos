@@ -12,15 +12,15 @@ void debug_error(char* s, char* file, int line) {
     // file
     char file_buf[100];
     sprintf(file_buf, "file: %s", file);
-    putstring8(binfo->vram, binfo->width, 0, binfo->height - CHAR_HEIGHT * 2, COL8_FFFFFF, file_buf);
+    putstring(binfo->vram, binfo->width, 0, binfo->height - CHAR_HEIGHT * 2, COL8_FFFFFF, file_buf);
 
     // line
     char line_buf[50];
     sprintf(line_buf, "line: %d", line);
-    putstring8(binfo->vram, binfo->width, 200, binfo->height - CHAR_HEIGHT * 2, COL8_FFFFFF, line_buf);
+    putstring(binfo->vram, binfo->width, 200, binfo->height - CHAR_HEIGHT * 2, COL8_FFFFFF, line_buf);
 
     // log
-    putstring8(binfo->vram, binfo->width, 0, binfo->height - CHAR_HEIGHT, COL8_FFFFFF, s);
+    putstring(binfo->vram, binfo->width, 0, binfo->height - CHAR_HEIGHT, COL8_FFFFFF, s);
 
     for (;;) {
         io_hlt();

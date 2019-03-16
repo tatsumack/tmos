@@ -14,7 +14,7 @@ void make_window(uchar* buf, int width, int height, char* title) {
     draw_rec(buf, width, COL8_000084, 3, 3, width - 4, 20);
     draw_rec(buf, width, COL8_848484, 1, height - 2, width - 2, height - 2);
     draw_rec(buf, width, COL8_000000, 0, height - 1, width - 1, height - 1);
-    putstring8(buf, width, 24, 4, COL8_FFFFFF, title);
+    putstring(buf, width, 24, 4, COL8_FFFFFF, title);
     for (int y = 0; y < 14; y++) {
         for (int x = 0; x < 16; x++) {
             char c = closebtn[y][x];

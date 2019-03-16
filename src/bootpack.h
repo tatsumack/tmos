@@ -111,9 +111,7 @@ void draw_rec(char* vram, int width, uchar c, int x0, int y0, int x1, int y1);
 
 void putfont8(char* vram, int width, int x, int y, char color, char* font);
 
-void putstring8(char* vram, int width, int x, int y, char color, char* s);
-
-void putblock8_8(char* vram, int width, int pwidth, int pheight, int px0, int py0, char* buf, int bwidth);
+void putstring(char* vram, int width, int x, int y, char color, char* s);
 
 // desctbl.c
 void init_gdtidt(void);
@@ -252,6 +250,8 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
 void sheet_refresh_map(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1, int zorder);
 
 void sheet_slide(Sheet* sht, int vx0, int vy0);
+
+void sheet_putstring(Sheet* sht, int x, int y, int c, int bg, char* s, int len);
 
 // window.c
 void make_window(uchar* buf, int width, int height, char* title);

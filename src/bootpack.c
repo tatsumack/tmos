@@ -101,7 +101,7 @@ void activate(void) {
         uint memtotal = memtest(0x00400000, 0xbfffffff);
         char membuf[40];
         sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
-        putstring8(sht_back->buf, binfo->width, 4, 32, COL8_FFFFFF, membuf);
+        putstring(sht_back->buf, binfo->width, 4, 32, COL8_FFFFFF, membuf);
     }
 
     sheet_refresh(sht_back, 0, 0, binfo->width, 48);
@@ -118,9 +118,7 @@ void update(void) {
 
         char s[40];
         sprintf(s, "%02X", i);
-        draw_rec(sht_back->buf, binfo->width, COL8_008484, 0, 16, 15, 31);
-        putstring8(sht_back->buf, binfo->width, 0, 16, COL8_FFFFFF, s);
-        sheet_refresh(sht_back, 0, 16, 16, 32);
+        sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
     } else if (!fifo_empty(&mousefifo)) {
         int i = fifo_get(&mousefifo);
         io_sti();
@@ -137,9 +135,7 @@ void update(void) {
             if ((mdec.btn & 0x04) != 0) {
                 s[2] = 'C';
             }
-            draw_rec(sht_back->buf, binfo->width, COL8_008484, 32, 16, 32 + 15 * 8 - 1, 31);
-            putstring8(sht_back->buf, binfo->width, 32, 16, COL8_FFFFFF, s);
-            sheet_refresh(sht_back, 32, 16, 32 + 15 * 8, 32);
+            sheet_putstring(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, 15);
 
             mouse_move(&minfo, mdec.x, mdec.y);
 
@@ -149,8 +145,7 @@ void update(void) {
     } else if (!fifo_empty(&timerfifo)) {
         fifo_get(&timerfifo);
         io_sti();
-        putstring8(sht_back->buf, binfo->width, 0, 64, COL8_FFFFFF, "10 sec");
-        sheet_refresh(sht_back, 0, 64, 56, 80);
+        sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
     } else {
         io_sti();
     }
@@ -159,7 +154,5 @@ void update(void) {
 void update_counter(void) {
     char buf_counter[20];
     sprintf(buf_counter, "%010d", timerman.count);
-    draw_rec(sht_win->buf, 160, COL8_C6C6C6, 40, 28, 119, 43);
-    putstring8(sht_win->buf, 160, 40, 28, COL8_000000, buf_counter);
-    sheet_refresh(sht_win, 40, 28, 120, 44);
+    sheet_putstring(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, buf_counter, 10);
 }
