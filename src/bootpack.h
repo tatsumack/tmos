@@ -268,7 +268,10 @@ typedef struct Timer {
 
 typedef struct TimerManager {
     uint count;
+    uint next_timeout;
+    uint using;
     Timer timers[MAX_TIMERS];
+    Timer* orders[MAX_TIMERS];
 } TimerManager;
 
 void init_pit(void);

@@ -21,6 +21,8 @@ void init_pit(void) {
     io_out8(PIT_CNT0, 0x2e);
 
     timerman.count = 0;
+    timerman.next_timeout = 0xffffffff;
+    timerman.using = 0;
     for (int i = 0; i < MAX_TIMERS; i++) {
         timerman.timers[i].flags = TIMER_FLAGS_NOTUSED;
     }
@@ -56,18 +58,50 @@ void inthandler20(int* esp) {
     io_out8(PIC0_OCW2, 0x60);  // ack to IRQ-00
     timerman.count++;
 
-    for (int i = 0; i < MAX_TIMERS; i++) {
-        if (timerman.timers[i].flags != TIMER_FLAGS_USING) continue;
-
-        timerman.timers[i].timeout--;
-        if (timerman.timers[i].timeout > 0) continue;
-
-        timerman.timers[i].flags = TIMER_FLAGS_ALLOC;
-        fifo_put(timerman.timers[i].fifo, timerman.timers[i].data);
+    if (timerman.count < timerman.next_timeout) {
+        return;
     }
+
+    int num = 0;
+    for (int i = 0; i < timerman.using; i++) {
+        if (timerman.orders[i]->timeout > timerman.count) {
+            break;
+        }
+        timerman.orders[i]->flags = TIMER_FLAGS_ALLOC;
+        fifo_put(timerman.orders[i]->fifo, timerman.orders[i]->data);
+        num++;
+    }
+
+    timerman.using -= num;
+
+    for (int j = 0; j < timerman.using; j++) {
+        timerman.orders[j] = timerman.orders[num + j];
+    }
+
+    timerman.next_timeout = timerman.using > 0 ? timerman.orders[0]->timeout : 0xffffffff;
 }
 
 void timer_settime(Timer* timer, uint timeout) {
-    timer->timeout = timeout;
+    timer->timeout = timerman.count + timeout;
     timer->flags = TIMER_FLAGS_USING;
+
+    int eflags = io_load_eflags();
+    io_cli();
+
+    // find where the timer inserts
+    int i;
+    for (i = 0; i < timerman.using; i++) {
+        if (timerman.orders[i]->timeout >= timer->timeout) {
+            break;
+        }
+    }
+
+    for (int j = timerman.using; j > i; j--) {
+        timerman.orders[j] = timerman.orders[j - 1];
+    }
+    timerman.using ++;
+    timerman.orders[i] = timer;
+    timerman.next_timeout = timerman.orders[0]->timeout;
+
+    io_store_eflags(eflags);
 }
