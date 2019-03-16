@@ -257,20 +257,33 @@ void sheet_slide(Sheet* sht, int vx0, int vy0);
 void make_window(uchar* buf, int width, int height, char* title);
 
 // timer.c
-typedef struct TimerManager {
-    uint count;
+#define MAX_TIMERS 500
+
+typedef struct Timer {
     uint timeout;
+    uint flags;
     FIFO* fifo;
     uchar data;
+} Timer;
+
+typedef struct TimerManager {
+    uint count;
+    Timer timers[MAX_TIMERS];
 } TimerManager;
 
 void init_pit(void);
 
 void init_timer(void);
 
-void inthandler20(int* esp);
+Timer* timer_alloc(void);
 
-void settimer(uint timeout, FIFO* fifo, uchar data);
+void timer_free(Timer* timer);
+
+void timer_init(Timer* timer, FIFO* fifo, uchar data);
+
+void timer_settime(Timer* timer, uint timeout);
+
+void inthandler20(int* esp);
 
 // debug.c
 void debug_error(char* s, char* file, int line);
