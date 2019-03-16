@@ -29,6 +29,7 @@ Sheet* sheet_alloc(SheetManager* shtman) {
         Sheet* sht = &shtman->sheets[i];
         sht->flags = SHEET_USE;
         sht->zorder = -1;
+        sht->man = shtman;
         return sht;
     }
 
@@ -42,7 +43,8 @@ void sheet_set_buf(Sheet* sht, uchar* buf, int width, int height, int col_inv) {
     sht->col_inv = col_inv;
 }
 
-void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder) {
+void sheet_updown(Sheet* sht, int zorder) {
+    SheetManager* shtman = sht->man;
     int old = sht->zorder;
 
     // clamp
@@ -95,9 +97,9 @@ void sheet_updown(SheetManager* shtman, Sheet* sht, int zorder) {
     sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height);
 }
 
-void sheet_refresh(SheetManager* shtman, Sheet* sht, int bx0, int by0, int bx1, int by1) {
+void sheet_refresh(Sheet* sht, int bx0, int by0, int bx1, int by1) {
     if (sht->height == -1) return;
-    sheet_refresh_sub(shtman, sht->vx + bx0, sht->vy + by0, sht->vx + bx1, sht->vy + by1);
+    sheet_refresh_sub(sht->man, sht->vx + bx0, sht->vy + by0, sht->vx + bx1, sht->vy + by1);
 }
 
 void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1) {
@@ -130,22 +132,23 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1)
 
 }
 
-void sheet_slide(SheetManager* shtman, Sheet* sht, int vx, int vy) {
+void sheet_slide(Sheet* sht, int vx, int vy) {
     int oldx = sht->vx;
     int oldy = sht->vy;
     sht->vx = vx;
     sht->vy = vy;
     if (sht->zorder != -1) {
-        sheet_refresh_sub(shtman, oldx, oldy, oldx + sht->width, oldy + sht->height);
-        sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height);
+        sheet_refresh_sub(sht->man, oldx, oldy, oldx + sht->width, oldy + sht->height);
+        sheet_refresh_sub(sht->man, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height);
     }
 }
 
-void sheet_free(SheetManager* shtman, Sheet* sht) {
+void sheet_free(Sheet* sht) {
     if (sht->zorder != -1) {
-        sheet_updown(shtman, sht, -1);
+        sheet_updown(sht, -1);
     }
     sht->flags = 0;
+    sht->man = NULL;
 }
 
 
