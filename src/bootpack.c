@@ -18,7 +18,7 @@ Sheet* sht_win;
 Sheet* sht_mouse;
 
 int count = 0;
-int is_counting;
+int is_counting = 0;
 
 void init(void);
 
