@@ -14,6 +14,7 @@ TimerManager timerman;
 
 FIFO timerfifo;
 char timerbuf[TIMERBUF_SIZE];
+Timer* timer_cursor;
 
 void init_pit(void) {
     io_out8(PIT_CTRL, 0x34);
@@ -31,9 +32,17 @@ void init_pit(void) {
 void init_timer(void) {
     fifo_init(&timerfifo, TIMERBUF_SIZE, timerbuf);
 
-    Timer* timer = timer_alloc();
-    timer_init(timer, &timerfifo, 1);
-    timer_settime(timer, 1000);
+    Timer* timer10 = timer_alloc();
+    timer_init(timer10, &timerfifo, 10);
+    timer_settime(timer10, 1000);
+
+    Timer* timer3 = timer_alloc();
+    timer_init(timer3, &timerfifo, 3);
+    timer_settime(timer3, 300);
+
+    timer_cursor = timer_alloc();
+    timer_init(timer_cursor, &timerfifo, 1);
+    timer_settime(timer_cursor, 50);
 }
 
 Timer* timer_alloc(void) {

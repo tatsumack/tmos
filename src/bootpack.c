@@ -6,6 +6,7 @@ extern FIFO keyfifo;
 extern FIFO mousefifo;
 extern FIFO timerfifo;
 extern TimerManager timerman;
+extern Timer* timer_cursor;
 
 MouseInfo minfo;
 MouseDec mdec;
@@ -17,13 +18,14 @@ Sheet* sht_back;
 Sheet* sht_win;
 Sheet* sht_mouse;
 
+int count = 0;
+int is_counting;
+
 void init(void);
 
 void activate(void);
 
 void update(void);
-
-void update_counter(void);
 
 void tmos_main(void) {
     init();
@@ -80,6 +82,8 @@ void activate(void) {
         make_window(buf_win, 160, 52, "counter");
         sheet_slide(sht_win, 80, 72);
         sheet_updown(sht_win, 1);
+
+        sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, "Now counting...", 15);
     }
 
     // mouse
@@ -108,7 +112,12 @@ void activate(void) {
 }
 
 void update(void) {
-    update_counter();
+    if (is_counting) {
+        count++;
+    }
+    char buf_counter[20];
+    sprintf(buf_counter, "%010d", count);
+    sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, buf_counter, 15);
 
     io_cli();
 
@@ -143,16 +152,24 @@ void update(void) {
             sheet_slide(sht_mouse, minfo.x, minfo.y);
         }
     } else if (!fifo_empty(&timerfifo)) {
-        fifo_get(&timerfifo);
+        int i = fifo_get(&timerfifo);
         io_sti();
-        sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
+        if (i == 10) {
+            is_counting = 0;
+            sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
+        }
+        if (i == 3) {
+            is_counting = 1;
+            count = 0;
+        }
+        if (i == 0 || i == 1) {
+            timer_init(timer_cursor, &timerfifo, i ^ 1);
+            timer_settime(timer_cursor, 50);
+
+            draw_rec(sht_back->buf, sht_back->width, i ? COL8_FFFFFF : COL8_008484, 8, 96, 15, 111);
+            sheet_refresh(sht_back, 8, 96, 16, 112);
+        }
     } else {
         io_sti();
     }
-}
-
-void update_counter(void) {
-    char buf_counter[20];
-    sprintf(buf_counter, "%010d", timerman.count);
-    sheet_putstring(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, buf_counter, 10);
 }

@@ -140,9 +140,8 @@ void sheet_refresh_sub(SheetManager* shtman, int vx0, int vy0, int vx1, int vy1,
 
             for (int bx = bx0; bx < bx1; bx++) {
                 int vx = sht->vx + bx;
-                uchar c = sht->buf[by * sht->width + bx];
-
                 if (shtman->map[vy * shtman->width + vx] == sid) {
+                    uchar c = sht->buf[by * sht->width + bx];
                     shtman->vram[vy * shtman->width + vx] = c;
                 }
             }
