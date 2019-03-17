@@ -1,8 +1,15 @@
 #include "bootpack.h"
+#include "stdio.h"
 
 #define FLAGS_OVERRUN 0x001
+#define FIFO_SIZE 128
 
-void fifo_init(FIFO* fifo, int size, uchar* buf) {
+FIFO fifo;
+FIFOData fifobuf[FIFO_SIZE];
+
+void init_fifo(void) { fifo_init(&fifo, FIFO_SIZE, fifobuf); }
+
+void fifo_init(FIFO* fifo, int size, FIFOData* buf) {
     fifo->size = size;
     fifo->buf = buf;
     fifo->free = size;
@@ -11,7 +18,7 @@ void fifo_init(FIFO* fifo, int size, uchar* buf) {
     fifo->read = 0;
 }
 
-int fifo_put(FIFO* fifo, uchar data) {
+int fifo_put(FIFO* fifo, FIFOData data) {
     if (fifo->free == 0) {
         fifo->flags |= FLAGS_OVERRUN;
         return -1;
@@ -26,12 +33,12 @@ int fifo_put(FIFO* fifo, uchar data) {
     return 0;
 }
 
-int fifo_get(FIFO* fifo) {
+FIFOData fifo_get(FIFO* fifo) {
     if (fifo_empty(fifo)) {
-        return -1;
+        TMOC_ERROR("FIFO is empty");
     }
 
-    int data = fifo->buf[fifo->read];
+    FIFOData data = fifo->buf[fifo->read];
     fifo->read++;
     if (fifo->read == fifo->size) {
         fifo->read = 0;

@@ -2,11 +2,10 @@
 
 #include "bootpack.h"
 
-extern FIFO keyfifo;
-extern FIFO mousefifo;
-extern FIFO timerfifo;
 extern TimerManager timerman;
 extern Timer* timer_cursor;
+
+extern FIFO fifo;
 
 MouseInfo minfo;
 MouseDec mdec;
@@ -27,6 +26,12 @@ void activate(void);
 
 void update(void);
 
+void update_keyboard(int val);
+
+void update_mouse(int val);
+
+void update_timer(int val);
+
 void tmos_main(void) {
     init();
 
@@ -38,6 +43,8 @@ void tmos_main(void) {
 }
 
 void init(void) {
+    init_fifo();
+
     init_gdtidt();
 
     init_pic();
@@ -120,56 +127,66 @@ void update(void) {
     sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, buf_counter, 15);
 
     io_cli();
-
-    if (!fifo_empty(&keyfifo)) {
-        int i = fifo_get(&keyfifo);
+    if (fifo_empty(&fifo)) {
         io_sti();
+        return;
+    }
 
-        char s[40];
-        sprintf(s, "%02X", i);
-        sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
-    } else if (!fifo_empty(&mousefifo)) {
-        int i = fifo_get(&mousefifo);
-        io_sti();
+    FIFOData data = fifo_get(&fifo);
+    io_sti();
 
-        if (mouse_decode(&mdec, i) == 1) {
-            char s[40];
-            sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
-            if ((mdec.btn & 0x01) != 0) {
-                s[1] = 'L';
-            }
-            if ((mdec.btn & 0x02) != 0) {
-                s[3] = 'R';
-            }
-            if ((mdec.btn & 0x04) != 0) {
-                s[2] = 'C';
-            }
-            sheet_putstring(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, 15);
+    if (data.type == fifotype_keyboard) {
+        update_keyboard(data.val);
+    }
+    if (data.type == fifotype_mouse) {
+        update_mouse(data.val);
+    }
+    if (data.type == fifotype_timer) {
+        update_timer(data.val);
+    }
+}
 
-            mouse_move(&minfo, mdec.x, mdec.y);
+void update_keyboard(int val) {
+    char s[40];
+    sprintf(s, "%02X", val);
+    sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
+}
 
-            // draw mouse
-            sheet_slide(sht_mouse, minfo.x, minfo.y);
-        }
-    } else if (!fifo_empty(&timerfifo)) {
-        int i = fifo_get(&timerfifo);
-        io_sti();
-        if (i == 10) {
-            is_counting = 0;
-            sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
-        }
-        if (i == 3) {
-            is_counting = 1;
-            count = 0;
-        }
-        if (i == 0 || i == 1) {
-            timer_init(timer_cursor, &timerfifo, i ^ 1);
-            timer_settime(timer_cursor, 50);
+void update_mouse(int val) {
+    if (mouse_decode(&mdec, val) != 1) return;
 
-            draw_rec(sht_back->buf, sht_back->width, i ? COL8_FFFFFF : COL8_008484, 8, 96, 15, 111);
-            sheet_refresh(sht_back, 8, 96, 16, 112);
-        }
-    } else {
-        io_sti();
+    char s[40];
+    sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
+    if ((mdec.btn & 0x01) != 0) {
+        s[1] = 'L';
+    }
+    if ((mdec.btn & 0x02) != 0) {
+        s[3] = 'R';
+    }
+    if ((mdec.btn & 0x04) != 0) {
+        s[2] = 'C';
+    }
+    sheet_putstring(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, 15);
+
+    mouse_move(&minfo, mdec.x, mdec.y);
+
+    sheet_slide(sht_mouse, minfo.x, minfo.y);
+}
+
+void update_timer(int val) {
+    if (val == 10) {
+        is_counting = 0;
+        sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
+    }
+    if (val == 3) {
+        is_counting = 1;
+        count = 0;
+    }
+    if (val == 0 || val == 1) {
+        timer_init(timer_cursor, &fifo, val ^ 1);
+        timer_settime(timer_cursor, 50);
+
+        draw_rec(sht_back->buf, sht_back->width, val ? COL8_FFFFFF : COL8_008484, 8, 96, 15, 111);
+        sheet_refresh(sht_back, 8, 96, 16, 112);
     }
 }

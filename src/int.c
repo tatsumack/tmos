@@ -1,5 +1,7 @@
 #include "bootpack.h"
 
+extern FIFO fifo;
+
 void init_pic(void) {
     // disable all interrupts
     io_out8(PIC0_IMR, 0xff);
@@ -29,25 +31,25 @@ void init_pic(void) {
 
 #define PORT_KEYDAT 0x0060
 
-extern FIFO keyfifo;
-
 // interrupted by keyboard
 void inthandler21(int *esp) {
     io_out8(PIC0_OCW2, 0x61);  // ack
 
-    uchar data = (uchar)io_in8(PORT_KEYDAT);
-    fifo_put(&keyfifo, data);
+    FIFOData data;
+    data.type = fifotype_keyboard;
+    data.val = io_in8(PORT_KEYDAT);
+    fifo_put(&fifo, data);
 }
-
-extern FIFO mousefifo;
 
 // interrupted by mouse
 void inthandler2c(int *esp) {
     io_out8(PIC1_OCW2, 0x64);  // ack
     io_out8(PIC0_OCW2, 0x62);  // ack
 
-    uchar data = (uchar)io_in8(PORT_KEYDAT);
-    fifo_put(&mousefifo, data);
+    FIFOData data;
+    data.type = fifotype_mouse;
+    data.val = io_in8(PORT_KEYDAT);
+    fifo_put(&fifo, data);
 }
 
 // interrupted by PIC1 on initialization

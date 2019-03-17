@@ -10,10 +10,9 @@
 #define TIMER_FLAGS_ALLOC 1
 #define TIMER_FLAGS_USING 2
 
-TimerManager timerman;
+extern FIFO fifo;
 
-FIFO timerfifo;
-char timerbuf[TIMERBUF_SIZE];
+TimerManager timerman;
 Timer* timer_cursor;
 
 void init_pit(void) {
@@ -30,18 +29,16 @@ void init_pit(void) {
 }
 
 void init_timer(void) {
-    fifo_init(&timerfifo, TIMERBUF_SIZE, timerbuf);
-
     Timer* timer10 = timer_alloc();
-    timer_init(timer10, &timerfifo, 10);
+    timer_init(timer10, &fifo, 10);
     timer_settime(timer10, 1000);
 
     Timer* timer3 = timer_alloc();
-    timer_init(timer3, &timerfifo, 3);
+    timer_init(timer3, &fifo, 3);
     timer_settime(timer3, 300);
 
     timer_cursor = timer_alloc();
-    timer_init(timer_cursor, &timerfifo, 1);
+    timer_init(timer_cursor, &fifo, 1);
     timer_settime(timer_cursor, 50);
 }
 
@@ -77,7 +74,10 @@ void inthandler20(int* esp) {
             break;
         }
         timerman.orders[i]->flags = TIMER_FLAGS_ALLOC;
-        fifo_put(timerman.orders[i]->fifo, timerman.orders[i]->data);
+        FIFOData data;
+        data.type = fifotype_timer;
+        data.val = timerman.orders[i]->data;
+        fifo_put(timerman.orders[i]->fifo, data);
         num++;
     }
 

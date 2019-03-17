@@ -85,16 +85,29 @@ void asm_inthandler2c(void);
 int asm_memtest(int start, int end);
 
 // fifo.c
+typedef enum FIFOType {
+    fifotype_timer,
+    fifotype_keyboard,
+    fifotype_mouse,
+} FIFOType;
+
+typedef struct FIFOData {
+    FIFOType type;
+    int val;
+} FIFOData;
+
 typedef struct FIFO {
-    uchar* buf;
+    FIFOData* buf;
     int write, read, size, free, flags;
 } FIFO;
 
-void fifo_init(FIFO* fifo, int size, uchar* buf);
+void init_fifo(void);
 
-int fifo_put(FIFO* fifo, uchar data);
+void fifo_init(FIFO* fifo, int size, FIFOData* buf);
 
-int fifo_get(FIFO* fifo);
+int fifo_put(FIFO* fifo, FIFOData data);
+
+FIFOData fifo_get(FIFO* fifo);
 
 int fifo_empty(FIFO* fifo);
 

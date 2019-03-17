@@ -1,8 +1,5 @@
 #include "bootpack.h"
 
-FIFO mousefifo;
-uchar fifobuf[MOUSE_FIFOBUF];
-
 void init_mouse(MouseInfo* minfo, MouseDec* mdec) {
     BootInfo* binfo = (BootInfo*)ADR_BOOTINFO;
 
@@ -12,8 +9,6 @@ void init_mouse(MouseInfo* minfo, MouseDec* mdec) {
     io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
 
     mdec->phase = 0;
-
-    fifo_init(&mousefifo, 128, fifobuf);
 }
 
 int mouse_decode(MouseDec* mdec, uchar dat) {
