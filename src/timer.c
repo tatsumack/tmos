@@ -20,9 +20,12 @@ void init_pit(void) {
     io_out8(PIT_CNT0, 0x9c);
     io_out8(PIT_CNT0, 0x2e);
 
+    Timer* last = timer_alloc();
+    last->timeout = 0xffffffff;
+    last->flags = TIMER_FLAGS_USING;
+    last->next = 0;
+    timerman.front = last;
     timerman.count = 0;
-    timerman.next_timeout = 0xffffffff;
-    timerman.using = 0;
     for (int i = 0; i < MAX_TIMERS; i++) {
         timerman.timers[i].flags = TIMER_FLAGS_NOTUSED;
     }
@@ -30,15 +33,15 @@ void init_pit(void) {
 
 void init_timer(void) {
     Timer* timer10 = timer_alloc();
-    timer_init(timer10, &fifo, 10);
+    timer_init(timer10, 10);
     timer_settime(timer10, 1000);
 
     Timer* timer3 = timer_alloc();
-    timer_init(timer3, &fifo, 3);
+    timer_init(timer3, 3);
     timer_settime(timer3, 300);
 
     timer_cursor = timer_alloc();
-    timer_init(timer_cursor, &fifo, 1);
+    timer_init(timer_cursor, 1);
     timer_settime(timer_cursor, 50);
 }
 
@@ -54,40 +57,32 @@ Timer* timer_alloc(void) {
 
 void timer_free(Timer* timer) { timer->flags = TIMER_FLAGS_NOTUSED; }
 
-void timer_init(Timer* timer, FIFO* fifo, uchar data) {
-    timer->fifo = fifo;
-    timer->data = data;
-}
+void timer_init(Timer* timer, uchar data) { timer->data = data; }
 
 // interrupted by PIT
 void inthandler20(int* esp) {
     io_out8(PIC0_OCW2, 0x60);  // ack to IRQ-00
     timerman.count++;
 
-    if (timerman.count < timerman.next_timeout) {
+    Timer* timer = timerman.front;
+    if (timerman.count < timer->timeout) {
         return;
     }
 
-    int num = 0;
-    for (int i = 0; i < timerman.using; i++) {
-        if (timerman.orders[i]->timeout > timerman.count) {
+    for (;;) {
+        if (timer->timeout > timerman.count) {
             break;
         }
-        timerman.orders[i]->flags = TIMER_FLAGS_ALLOC;
+        timer->flags = TIMER_FLAGS_ALLOC;
+
         FIFOData data;
         data.type = fifotype_timer;
-        data.val = timerman.orders[i]->data;
-        fifo_put(timerman.orders[i]->fifo, data);
-        num++;
+        data.val = timer->data;
+        fifo_put(&fifo, data);
+        timer = timer->next;
     }
 
-    timerman.using -= num;
-
-    for (int j = 0; j < timerman.using; j++) {
-        timerman.orders[j] = timerman.orders[num + j];
-    }
-
-    timerman.next_timeout = timerman.using > 0 ? timerman.orders[0]->timeout : 0xffffffff;
+    timerman.front = timer;
 }
 
 void timer_settime(Timer* timer, uint timeout) {
@@ -98,19 +93,24 @@ void timer_settime(Timer* timer, uint timeout) {
     io_cli();
 
     // find where the timer inserts
-    int i;
-    for (i = 0; i < timerman.using; i++) {
-        if (timerman.orders[i]->timeout >= timer->timeout) {
-            break;
+    Timer* f = timerman.front;
+    if (timer->timeout <= f->timeout) {
+        timerman.front = timer;
+        timer->next = f;
+        io_store_eflags(eflags);
+        return;
+    }
+
+    Timer* prev = f;
+    Timer* cur = prev;
+    for (;;) {
+        prev = cur;
+        cur = cur->next;
+        if (timer->timeout <= cur->timeout) {
+            prev->next = timer;
+            timer->next = cur;
+            io_store_eflags(eflags);
+            return;
         }
     }
-
-    for (int j = timerman.using; j > i; j--) {
-        timerman.orders[j] = timerman.orders[j - 1];
-    }
-    timerman.using ++;
-    timerman.orders[i] = timer;
-    timerman.next_timeout = timerman.orders[0]->timeout;
-
-    io_store_eflags(eflags);
 }

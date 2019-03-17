@@ -183,7 +183,7 @@ void update_timer(int val) {
         count = 0;
     }
     if (val == 0 || val == 1) {
-        timer_init(timer_cursor, &fifo, val ^ 1);
+        timer_init(timer_cursor, val ^ 1);
         timer_settime(timer_cursor, 50);
 
         draw_rec(sht_back->buf, sht_back->width, val ? COL8_FFFFFF : COL8_008484, 8, 96, 15, 111);

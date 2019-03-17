@@ -275,16 +275,14 @@ void make_window(uchar* buf, int width, int height, char* title);
 typedef struct Timer {
     uint timeout;
     uint flags;
-    FIFO* fifo;
     uchar data;
+    struct Timer* next;
 } Timer;
 
 typedef struct TimerManager {
     uint count;
-    uint next_timeout;
-    uint using;
     Timer timers[MAX_TIMERS];
-    Timer* orders[MAX_TIMERS];
+    Timer* front;
 } TimerManager;
 
 void init_pit(void);
@@ -295,7 +293,7 @@ Timer* timer_alloc(void);
 
 void timer_free(Timer* timer);
 
-void timer_init(Timer* timer, FIFO* fifo, uchar data);
+void timer_init(Timer* timer, uchar data);
 
 void timer_settime(Timer* timer, uint timeout);
 
