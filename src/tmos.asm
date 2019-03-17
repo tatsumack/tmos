@@ -14,13 +14,13 @@ VRAM	EQU		0x0ff8
 
 		ORG		0xc200
 
-		MOV		AL,0x13         ; vga graphics, 320 * 200, 8bit color
-		MOV		AH,0x00         ; change display mode
-		INT		0x10
-		MOV		BYTE [VMODE],8
-		MOV		WORD [SCRNX],320
-		MOV		WORD [SCRNY],200
-		MOV		DWORD [VRAM],0x000a0000
+		MOV     BX, 0x4101       ; VBE 640*480
+		MOV     AX, 0x4f02
+		INT     0x10
+		MOV     BYTE [VMODE], 8
+		MOV		WORD [SCRNX], 640
+		MOV		WORD [SCRNY], 480
+		MOV		DWORD [VRAM], 0xfd000000
 
 ; keyboard LED
 		MOV		AH,0x02

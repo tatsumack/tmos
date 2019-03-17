@@ -170,6 +170,8 @@ void init_keyboard(void);
 
 void wait_kbc_sendready(void);
 
+char get_key(int code);
+
 #define KEY_FIFOBUF             32
 #define PORT_KEYDAT             0x0060
 #define PORT_KEYSTA             0x0064

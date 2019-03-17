@@ -4,11 +4,11 @@
 
 extern TimerManager timerman;
 extern Timer* timer_cursor;
-
 extern FIFO fifo;
 
 MouseInfo minfo;
 MouseDec mdec;
+
 BootInfo* binfo = (BootInfo*)ADR_BOOTINFO;
 MemoryManager* memman = (MemoryManager*)ADR_MEMMAN;
 
@@ -16,9 +16,6 @@ SheetManager* shtman;
 Sheet* sht_back;
 Sheet* sht_win;
 Sheet* sht_mouse;
-
-int count = 0;
-int is_counting = 0;
 
 void init(void);
 
@@ -86,11 +83,9 @@ void activate(void) {
             TMOC_ERROR("failed to allocate buf_win");
         }
         sheet_set_buf(sht_win, buf_win, 160, 52, -1);
-        make_window(buf_win, 160, 52, "counter");
+        make_window(buf_win, 160, 52, "window");
         sheet_slide(sht_win, 80, 72);
         sheet_updown(sht_win, 1);
-
-        sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, "Now counting...", 15);
     }
 
     // mouse
@@ -119,16 +114,9 @@ void activate(void) {
 }
 
 void update(void) {
-    if (is_counting) {
-        count++;
-    }
-    char buf_counter[20];
-    sprintf(buf_counter, "%010d", count);
-    sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, buf_counter, 15);
-
     io_cli();
     if (fifo_empty(&fifo)) {
-        io_sti();
+        io_stihlt();
         return;
     }
 
@@ -148,8 +136,13 @@ void update(void) {
 
 void update_keyboard(int val) {
     char s[40];
-    sprintf(s, "%02X", val);
+    sprintf(s, "%02d", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
+    if (get_key(val) == 0) return;
+
+    s[0] = get_key(val);
+    s[1] = 0;
+    sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, s, 1);
 }
 
 void update_mouse(int val) {
@@ -175,12 +168,10 @@ void update_mouse(int val) {
 
 void update_timer(int val) {
     if (val == 10) {
-        is_counting = 0;
         sheet_putstring(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec", 6);
     }
     if (val == 3) {
-        is_counting = 1;
-        count = 0;
+        sheet_putstring(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, " 3 sec", 6);
     }
     if (val == 0 || val == 1) {
         timer_init(timer_cursor, val ^ 1);
