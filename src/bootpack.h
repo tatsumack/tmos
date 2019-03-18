@@ -271,6 +271,8 @@ void sheet_putstring(Sheet* sht, int x, int y, int c, int bg, char* s, int len);
 // window.c
 void make_window(uchar* buf, int width, int height, char* title);
 
+void make_textbox(Sheet* sht, int x0, int y0, int sx, int sy, int c);
+
 // timer.c
 #define MAX_TIMERS 500
 

@@ -31,3 +31,16 @@ void make_window(uchar* buf, int width, int height, char* title) {
         }
     }
 }
+
+void make_textbox(Sheet* sht, int x0, int y0, int sx, int sy, int c) {
+    int x1 = x0 + sx, y1 = y0 + sy;
+    draw_rec(sht->buf, sht->width, COL8_848484, x0 - 2, y0 - 3, x1 + 1, y0 - 3);
+    draw_rec(sht->buf, sht->width, COL8_848484, x0 - 3, y0 - 3, x0 - 3, y1 + 1);
+    draw_rec(sht->buf, sht->width, COL8_FFFFFF, x0 - 3, y1 + 2, x1 + 1, y1 + 2);
+    draw_rec(sht->buf, sht->width, COL8_FFFFFF, x1 + 2, y0 - 3, x1 + 2, y1 + 2);
+    draw_rec(sht->buf, sht->width, COL8_000000, x0 - 1, y0 - 2, x1 + 0, y0 - 2);
+    draw_rec(sht->buf, sht->width, COL8_000000, x0 - 2, y0 - 2, x0 - 2, y1 + 0);
+    draw_rec(sht->buf, sht->width, COL8_C6C6C6, x0 - 2, y1 + 1, x1 + 0, y1 + 1);
+    draw_rec(sht->buf, sht->width, COL8_C6C6C6, x1 + 1, y0 - 2, x1 + 1, y1 + 1);
+    draw_rec(sht->buf, sht->width, c, x0 - 1, y0 - 1, x1 + 0, y1 + 0);
+}

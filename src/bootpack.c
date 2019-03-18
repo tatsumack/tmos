@@ -17,6 +17,9 @@ Sheet* sht_back;
 Sheet* sht_win;
 Sheet* sht_mouse;
 
+int cursor_x = 8;
+int cursor_c = COL8_FFFFFF;
+
 void init(void);
 
 void activate(void);
@@ -84,6 +87,8 @@ void activate(void) {
         }
         sheet_set_buf(sht_win, buf_win, 160, 52, -1);
         make_window(buf_win, 160, 52, "window");
+        make_textbox(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
+
         sheet_slide(sht_win, 80, 72);
         sheet_updown(sht_win, 1);
     }
@@ -138,11 +143,19 @@ void update_keyboard(int val) {
     char s[40];
     sprintf(s, "%02d", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
-    if (get_key(val) == 0) return;
+    if (get_key(val) != 0 && cursor_x < 144) {
+        s[0] = get_key(val);
+        s[1] = 0;
+        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+        cursor_x += 8;
+    }
+    if (val == 0x0e && cursor_x > 8) {
+        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+        cursor_x -= 8;
+    }
 
-    s[0] = get_key(val);
-    s[1] = 0;
-    sheet_putstring(sht_win, 20, 28, COL8_000000, COL8_C6C6C6, s, 1);
+    draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+    sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
 }
 
 void update_mouse(int val) {
@@ -177,7 +190,9 @@ void update_timer(int val) {
         timer_init(timer_cursor, val ^ 1);
         timer_settime(timer_cursor, 50);
 
-        draw_rec(sht_back->buf, sht_back->width, val ? COL8_FFFFFF : COL8_008484, 8, 96, 15, 111);
-        sheet_refresh(sht_back, 8, 96, 16, 112);
+        cursor_c = val ? COL8_FFFFFF : COL8_000000;
+
+        draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
     }
 }
