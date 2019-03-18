@@ -20,15 +20,16 @@ void init_pit(void) {
     io_out8(PIT_CNT0, 0x9c);
     io_out8(PIT_CNT0, 0x2e);
 
-    Timer* last = timer_alloc();
-    last->timeout = 0xffffffff;
-    last->flags = TIMER_FLAGS_USING;
-    last->next = 0;
-    timerman.front = last;
-    timerman.count = 0;
     for (int i = 0; i < MAX_TIMERS; i++) {
         timerman.timers[i].flags = TIMER_FLAGS_NOTUSED;
     }
+
+    Timer* last = timer_alloc();
+    last->timeout = 0xffffffff;
+    last->flags = TIMER_FLAGS_USING;
+    last->next = NULL;
+    timerman.front = last;
+    timerman.count = 0;
 }
 
 void init_timer(void) {
@@ -70,7 +71,7 @@ void inthandler20(int* esp) {
     }
 
     for (;;) {
-        if (timer->timeout > timerman.count) {
+        if (timerman.count < timer->timeout) {
             break;
         }
         timer->flags = TIMER_FLAGS_ALLOC;

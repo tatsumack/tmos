@@ -302,8 +302,10 @@ void timer_settime(Timer* timer, uint timeout);
 void inthandler20(int* esp);
 
 // debug.c
-void debug_error(char* s, char* file, int line);
+void tmoc_error(char* s, char* file, int line);
+void tmoc_debug(char* s, char* file, int line);
 
-#define TMOC_ERROR(...) do { char error_buf[100]; sprintf(error_buf, __VA_ARGS__); debug_error(error_buf, __FILE__, __LINE__); } while(0)
+#define TMOC_ERROR(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmoc_error(buf, __FILE__, __LINE__); } while(0)
+#define TMOC_DEBUG(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmoc_debug(buf, __FILE__, __LINE__); } while(0)
 
 #endif // TMOC_BOOTPACK_H
