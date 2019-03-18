@@ -177,6 +177,10 @@ void update_mouse(int val) {
     mouse_move(&minfo, mdec.x, mdec.y);
 
     sheet_slide(sht_mouse, minfo.x, minfo.y);
+
+    if (mdec.btn & 0x01) {
+        sheet_slide(sht_win, minfo.x - 8, minfo.y - 8);
+    }
 }
 
 void update_timer(int val) {
