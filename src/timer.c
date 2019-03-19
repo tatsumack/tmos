@@ -11,6 +11,7 @@
 #define TIMER_FLAGS_USING 2
 
 extern FIFO fifo;
+extern Timer* mt_timer;
 
 TimerManager timerman;
 Timer* timer_cursor;
@@ -34,15 +35,15 @@ void init_pit(void) {
 
 void init_timer(void) {
     Timer* timer10 = timer_alloc();
-    timer_init(timer10, 10);
+    timer_init(timer10, &fifo, 10);
     timer_settime(timer10, 1000);
 
     Timer* timer3 = timer_alloc();
-    timer_init(timer3, 3);
+    timer_init(timer3, &fifo, 3);
     timer_settime(timer3, 300);
 
     timer_cursor = timer_alloc();
-    timer_init(timer_cursor, 1);
+    timer_init(timer_cursor, &fifo, 1);
     timer_settime(timer_cursor, 50);
 }
 
@@ -58,12 +59,17 @@ Timer* timer_alloc(void) {
 
 void timer_free(Timer* timer) { timer->flags = TIMER_FLAGS_NOTUSED; }
 
-void timer_init(Timer* timer, uchar data) { timer->data = data; }
+void timer_init(Timer* timer, FIFO* fifo, uchar data) {
+    timer->fifo = fifo;
+    timer->data = data;
+}
 
 // interrupted by PIT
 void inthandler20(int* esp) {
     io_out8(PIC0_OCW2, 0x60);  // ack to IRQ-00
     timerman.count++;
+
+    char ts = 0;
 
     Timer* timer = timerman.front;
     if (timerman.count < timer->timeout) {
@@ -75,15 +81,23 @@ void inthandler20(int* esp) {
             break;
         }
         timer->flags = TIMER_FLAGS_ALLOC;
+        if (timer == mt_timer) {
+            ts = 1;
+        } else {
+            FIFOData data;
+            data.type = fifotype_timer;
+            data.val = timer->data;
+            fifo_put(timer->fifo, data);
+        }
 
-        FIFOData data;
-        data.type = fifotype_timer;
-        data.val = timer->data;
-        fifo_put(&fifo, data);
         timer = timer->next;
     }
 
     timerman.front = timer;
+
+    if (ts == 1) {
+        mt_taskswitch();
+    }
 }
 
 void timer_settime(Timer* timer, uint timeout) {

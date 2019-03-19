@@ -10,10 +10,12 @@
     GLOBAL io_in8
     GLOBAL io_load_eflags
     GLOBAL io_store_eflags
-    GLOBAL load_cr0;
-    GLOBAL store_cr0;
+    GLOBAL load_cr0
+    GLOBAL store_cr0
+    GLOBAL load_tr
     GLOBAL load_gdtr
     GLOBAL load_idtr
+    GLOBAL far_jmp
     GLOBAL asm_inthandler20
     GLOBAL asm_inthandler21
     GLOBAL asm_inthandler27
@@ -76,6 +78,10 @@ store_cr0: ; void store_cr0(int cr0);
     MOV     CR0, EAX
     RET
 
+load_tr: ; void load_tr(int tr);
+    LTR     [ESP+4]     ;tr
+    RET
+
 load_gdtr: ; void load_gdtr(int limit, int addr);
     MOV     AX, [ESP+4] ; limit
     MOV     [ESP+6], AX
@@ -86,6 +92,10 @@ load_idtr: ; void load_idtr(int limit, int addr);
     MOV     AX, [ESP+4] ; limit
     MOV     [ESP+6], AX
     LIDT    [ESP+6]
+    RET
+
+far_jmp: ; void far_jmp(int eip, int cs);
+    JMP     FAR [ESP+4]
     RET
 
 asm_inthandler20:

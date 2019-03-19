@@ -70,9 +70,13 @@ int load_cr0(void);
 
 void store_cr0(int cr0);
 
+void load_tr(int tr);
+
 void load_gdtr(int limit, int addr);
 
 void load_idtr(int limit, int addr);
+
+void far_jmp(int eip, int cs);
 
 void asm_inthandler20(void);
 
@@ -127,21 +131,29 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font);
 void putstring(char* vram, int width, int x, int y, char color, char* s);
 
 // desctbl.c
+typedef struct {
+    int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
+    int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
+    int es, cs, ss, ds, fs, gs;
+    int ldtr, iomap;
+} TSS32;
+
 void init_gdtidt(void);
 
 void set_segmdesc(SegmentDescriptor* sd, uint limit, int base, int ar);
 
 void set_gatedesc(GateDescriptor* gd, int offset, int selector, int ar);
 
-#define ADR_IDT 0x0026f800
-#define LIMIT_IDT 0x000007ff
-#define ADR_GDT 0x00270000
-#define LIMIT_GDT 0x0000ffff
-#define ADR_BOTPAK 0x00280000
-#define LIMIT_BOTPAK 0x0007ffff
-#define AR_DATA32_RW 0x4092
-#define AR_CODE32_ER 0x409a
-#define AR_INTGATE32 0x008e
+#define ADR_IDT         0x0026f800
+#define LIMIT_IDT       0x000007ff
+#define ADR_GDT         0x00270000
+#define LIMIT_GDT       0x0000ffff
+#define ADR_BOTPAK      0x00280000
+#define LIMIT_BOTPAK    0x0007ffff
+#define AR_DATA32_RW    0x4092
+#define AR_CODE32_ER    0x409a
+#define AR_TSS32        0x0089
+#define AR_INTGATE32    0x008e
 
 // int.c
 void init_pic(void);
@@ -281,6 +293,7 @@ typedef struct Timer {
     uint flags;
     uchar data;
     struct Timer* next;
+    FIFO* fifo;
 } Timer;
 
 typedef struct TimerManager {
@@ -297,11 +310,17 @@ Timer* timer_alloc(void);
 
 void timer_free(Timer* timer);
 
-void timer_init(Timer* timer, uchar data);
+void timer_init(Timer* timer, FIFO* fifo, uchar data);
 
 void timer_settime(Timer* timer, uint timeout);
 
 void inthandler20(int* esp);
+
+// mtask.c
+
+void mt_init(void);
+
+void mt_taskswitch(void);
 
 // debug.c
 void tmoc_error(char* s, char* file, int line);
