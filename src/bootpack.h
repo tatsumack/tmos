@@ -350,9 +350,6 @@ void task_switch(void);
 
 void task_sleep(Task* task);
 
-void mt_init(void);
-
-void mt_taskswitch(void);
 
 // debug.c
 void tmos_error(char* s, char* file, int line);
