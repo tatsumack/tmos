@@ -6,13 +6,13 @@
 SheetManager* shtman_init(MemoryManager* memman, char* vram, int width, int height) {
     SheetManager* shtman = (SheetManager*)memman_alloc_4k(memman, sizeof(SheetManager));
     if (!shtman) {
-        TMOC_ERROR("failed to allocate SheetManager");
+        TMOS_ERROR("failed to allocate SheetManager");
         return NULL;
     }
 
     shtman->map = (char*)memman_alloc_4k(memman, width * height);
     if (!shtman->map) {
-        TMOC_ERROR("failed to allocate sht->map");
+        TMOS_ERROR("failed to allocate sht->map");
         return NULL;
     }
 

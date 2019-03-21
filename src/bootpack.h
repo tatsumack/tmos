@@ -1,5 +1,5 @@
-#ifndef TMOC_BOOTPACK_H
-#define TMOC_BOOTPACK_H
+#ifndef TMOS_BOOTPACK_H
+#define TMOS_BOOTPACK_H
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
@@ -131,13 +131,6 @@ void putfont8(char* vram, int width, int x, int y, char color, char* font);
 void putstring(char* vram, int width, int x, int y, char color, char* s);
 
 // desctbl.c
-typedef struct {
-    int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
-    int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
-    int es, cs, ss, ds, fs, gs;
-    int ldtr, iomap;
-} TSS32;
-
 void init_gdtidt(void);
 
 void set_segmdesc(SegmentDescriptor* sd, uint limit, int base, int ar);
@@ -317,16 +310,52 @@ void timer_settime(Timer* timer, uint timeout);
 void inthandler20(int* esp);
 
 // mtask.c
+#define MAX_TASKS 1000
+#define TASK_GDT0 3
+
+typedef struct TSS32 {
+    int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
+    int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
+    int es, cs, ss, ds, fs, gs;
+    int ldtr, iomap;
+} TSS32;
+
+typedef enum TaskStatus {
+    taskstatus_alloc,
+    taskstatus_running,
+    taskstatus_notused,
+} TaskStatus;
+
+typedef struct Task {
+    int segment;
+    TaskStatus status;
+    TSS32 tss;
+} Task;
+
+typedef struct TaskManager {
+    int running;
+    int now;
+    Task* orders[MAX_TASKS];
+    Task tasks[MAX_TASKS];
+} TaskManager;
+
+Task* task_init(MemoryManager* memman);
+
+Task* task_alloc(void);
+
+void task_run(Task* task);
+
+void task_switch(void);
 
 void mt_init(void);
 
 void mt_taskswitch(void);
 
 // debug.c
-void tmoc_error(char* s, char* file, int line);
-void tmoc_debug(char* s, char* file, int line);
+void tmos_error(char* s, char* file, int line);
+void tmos_debug(char* s, char* file, int line);
 
-#define TMOC_ERROR(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmoc_error(buf, __FILE__, __LINE__); } while(0)
-#define TMOC_DEBUG(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmoc_debug(buf, __FILE__, __LINE__); } while(0)
+#define TMOS_ERROR(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmos_error(buf, __FILE__, __LINE__); } while(0)
+#define TMOS_DEBUG(...) do { char buf[100]; sprintf(buf, __VA_ARGS__); tmos_debug(buf, __FILE__, __LINE__); } while(0)
 
-#endif // TMOC_BOOTPACK_H
+#endif // TMOS_BOOTPACK_H

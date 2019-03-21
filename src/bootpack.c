@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include "bootpack.h"
+#include <stdio.h>
 
 extern TimerManager timerman;
 extern Timer* timer_cursor;
@@ -66,35 +65,18 @@ void init(void) {
     init_mt();
 }
 
-TSS32 tss_a, tss_b;
 void init_mt(void) {
-    SegmentDescriptor* gdt = (SegmentDescriptor*)ADR_GDT;
-
-    tss_a.ldtr = 0;
-    tss_a.iomap = 0x40000000;
-    tss_b.ldtr = 0;
-    tss_b.iomap = 0x40000000;
-    set_segmdesc(gdt + 3, 103, (int)&tss_a, AR_TSS32);
-    set_segmdesc(gdt + 4, 103, (int)&tss_b, AR_TSS32);
-    load_tr(3 * 8);
-    uint task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-    tss_b.eip = (int)&task_b_main;
-    tss_b.eflags = 0x00000202;  // STI
-    tss_b.eax = 0;
-    tss_b.ecx = 0;
-    tss_b.edx = 0;
-    tss_b.ebx = 0;
-    tss_b.esp = task_b_esp;
-    tss_b.ebp = 0;
-    tss_b.esi = 0;
-    tss_b.edi = 0;
-    tss_b.es = 1 * 8;
-    tss_b.cs = 2 * 8;
-    tss_b.ss = 1 * 8;
-    tss_b.ds = 1 * 8;
-    tss_b.fs = 1 * 8;
-    tss_b.gs = 1 * 8;
-    mt_init();
+    task_init(memman);
+    Task* task_b = task_alloc();
+    task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+    task_b->tss.eip = (int)&task_b_main;
+    task_b->tss.es = 1 * 8;
+    task_b->tss.cs = 2 * 8;
+    task_b->tss.ss = 1 * 8;
+    task_b->tss.ds = 1 * 8;
+    task_b->tss.fs = 1 * 8;
+    task_b->tss.gs = 1 * 8;
+    task_run(task_b);
 }
 
 void activate(void) {
@@ -116,11 +98,11 @@ void activate(void) {
     {
         sht_win = sheet_alloc(shtman);
         if (!sht_win) {
-            TMOC_ERROR("failed to allocate sht_win");
+            TMOS_ERROR("failed to allocate sht_win");
         }
         uchar* buf_win = (uchar*)memman_alloc_4k(memman, 160 * 52);
         if (!buf_win) {
-            TMOC_ERROR("failed to allocate buf_win");
+            TMOS_ERROR("failed to allocate buf_win");
         }
         sheet_set_buf(sht_win, buf_win, 160, 52, -1);
         make_window(buf_win, 160, 52, "window");

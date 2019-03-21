@@ -11,7 +11,7 @@
 #define TIMER_FLAGS_USING 2
 
 extern FIFO fifo;
-extern Timer* mt_timer;
+extern Timer* task_timer;
 
 TimerManager timerman;
 Timer* timer_cursor;
@@ -54,7 +54,7 @@ Timer* timer_alloc(void) {
         timerman.timers[i].flags = TIMER_FLAGS_ALLOC;
         return &timerman.timers[i];
     }
-    TMOC_ERROR("can't find not used timer");
+    TMOS_ERROR("can't find not used timer");
 }
 
 void timer_free(Timer* timer) { timer->flags = TIMER_FLAGS_NOTUSED; }
@@ -81,7 +81,7 @@ void inthandler20(int* esp) {
             break;
         }
         timer->flags = TIMER_FLAGS_ALLOC;
-        if (timer == mt_timer) {
+        if (timer == task_timer) {
             ts = 1;
         } else {
             FIFOData data;
@@ -96,7 +96,7 @@ void inthandler20(int* esp) {
     timerman.front = timer;
 
     if (ts == 1) {
-        mt_taskswitch();
+        task_switch();
     }
 }
 

@@ -5,7 +5,7 @@ extern BootInfo* binfo;
 
 #define CHAR_HEIGHT 16
 
-void tmoc_error(char* s, char* file, int line) {
+void tmos_error(char* s, char* file, int line) {
     // bg
     draw_rec(binfo->vram, binfo->width, COL8_FF0000, 0, binfo->height - CHAR_HEIGHT * 2, binfo->width, binfo->height);
 
@@ -27,7 +27,7 @@ void tmoc_error(char* s, char* file, int line) {
     }
 }
 
-void tmoc_debug(char* s, char* file, int line) {
+void tmos_debug(char* s, char* file, int line) {
     // bg
     draw_rec(binfo->vram, binfo->width, COL8_000000, 0, binfo->height - CHAR_HEIGHT * 2, binfo->width, binfo->height);
 

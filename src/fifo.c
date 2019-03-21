@@ -35,7 +35,7 @@ int fifo_put(FIFO* fifo, FIFOData data) {
 
 FIFOData fifo_get(FIFO* fifo) {
     if (fifo_empty(fifo)) {
-        TMOC_ERROR("FIFO is empty");
+        TMOS_ERROR("FIFO is empty");
     }
 
     FIFOData data = fifo->buf[fifo->read];
