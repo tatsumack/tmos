@@ -58,6 +58,41 @@ Task* task_alloc(void) {
     return 0;
 }
 
+void task_sleep(Task* task) {
+    if (task->status != taskstatus_running) return;
+
+    char needTaskSwitch = 0;
+    if (task == taskman->orders[taskman->now]) {
+        needTaskSwitch = 1;
+    }
+
+    int i;
+    for (i = 0; i < taskman->running; i++) {
+        if (taskman->orders[i] == task) {
+            // found
+            break;
+        }
+    }
+
+    taskman->running--;
+    if (i < taskman->now) {
+        taskman->now--;
+    }
+
+    for (; i < taskman->running; i++) {
+        taskman->orders[i] = taskman->orders[i + 1];
+    }
+
+    task->status = taskstatus_notused;
+
+    if (needTaskSwitch) {
+        if (taskman->now >= taskman->running) {
+            taskman->now = 0;
+        }
+        far_jmp(0, taskman->orders[taskman->now]->segment);
+    }
+}
+
 void task_run(Task* task) {
     task->status = taskstatus_running;
     taskman->orders[taskman->running] = task;

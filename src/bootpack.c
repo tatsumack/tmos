@@ -19,6 +19,8 @@ Sheet* sht_mouse;
 int cursor_x = 8;
 int cursor_c = COL8_FFFFFF;
 
+Task* task_a;
+
 void init(void);
 
 void init_mt(void);
@@ -66,7 +68,9 @@ void init(void) {
 }
 
 void init_mt(void) {
-    task_init(memman);
+    task_a = task_init(memman);
+    fifo.task = task_a;
+
     Task* task_b = task_alloc();
     task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
     task_b->tss.eip = (int)&task_b_main;
@@ -140,7 +144,8 @@ void activate(void) {
 void update(void) {
     io_cli();
     if (fifo_empty(&fifo)) {
-        io_stihlt();
+        task_sleep(task_a);
+        io_sti();
         return;
     }
 
@@ -226,7 +231,7 @@ void task_b_main() {
     char s[12];
 
     FIFO fifo;
-    fifo_init(&fifo, 128, fifobuf);
+    fifo_init(&fifo, 128, fifobuf, 0);
 
     Timer* timer_put = timer_alloc();
     timer_init(timer_put, &fifo, 1);

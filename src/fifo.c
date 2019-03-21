@@ -7,15 +7,16 @@
 FIFO fifo;
 FIFOData fifobuf[FIFO_SIZE];
 
-void init_fifo(void) { fifo_init(&fifo, FIFO_SIZE, fifobuf); }
+void init_fifo(void) { fifo_init(&fifo, FIFO_SIZE, fifobuf, 0); }
 
-void fifo_init(FIFO* fifo, int size, FIFOData* buf) {
+void fifo_init(FIFO* fifo, int size, FIFOData* buf, Task* task) {
     fifo->size = size;
     fifo->buf = buf;
     fifo->free = size;
     fifo->flags = 0;
     fifo->write = 0;
     fifo->read = 0;
+    fifo->task = task;
 }
 
 int fifo_put(FIFO* fifo, FIFOData data) {
@@ -30,6 +31,12 @@ int fifo_put(FIFO* fifo, FIFOData data) {
         fifo->write = 0;
     }
     fifo->free--;
+
+    if (fifo->task) {
+        if (fifo->task->status != taskstatus_running) {
+            task_run(fifo->task);
+        }
+    }
     return 0;
 }
 

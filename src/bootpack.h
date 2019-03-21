@@ -103,11 +103,12 @@ typedef struct FIFOData {
 typedef struct FIFO {
     FIFOData* buf;
     int write, read, size, free, flags;
+    struct Task* task;
 } FIFO;
 
 void init_fifo(void);
 
-void fifo_init(FIFO* fifo, int size, FIFOData* buf);
+void fifo_init(FIFO* fifo, int size, FIFOData* buf, struct Task* task);
 
 int fifo_put(FIFO* fifo, FIFOData data);
 
@@ -346,6 +347,8 @@ Task* task_alloc(void);
 void task_run(Task* task);
 
 void task_switch(void);
+
+void task_sleep(Task* task);
 
 void mt_init(void);
 
