@@ -19,6 +19,7 @@ Task* task_init(MemoryManager* memman) {
 
     Task* task = task_alloc();
     task->status = taskstatus_running;
+    task->priority = 2;
     taskman->running = 1;
     taskman->now = 0;
     taskman->orders[0] = task;
@@ -93,19 +94,25 @@ void task_sleep(Task* task) {
     }
 }
 
-void task_run(Task* task) {
+void task_run(Task* task, int priority) {
+    if (priority > 0) {
+        task->priority = priority;
+    }
+
+    if (task->status == taskstatus_running) return;
     task->status = taskstatus_running;
     taskman->orders[taskman->running] = task;
     taskman->running++;
 }
 
 void task_switch(void) {
-    timer_settime(task_timer, 2);
-
-    if (taskman->running == 1) return;
-
     taskman->now++;
     taskman->now %= taskman->running;
 
-    far_jmp(0, taskman->orders[taskman->now]->segment);
+    Task* task = taskman->orders[taskman->now];
+    timer_settime(task_timer, task->priority);
+
+    if (taskman->running > 1) {
+        far_jmp(0, taskman->orders[taskman->now]->segment);
+    }
 }

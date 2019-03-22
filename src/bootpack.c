@@ -14,6 +14,7 @@ MemoryManager* memman = (MemoryManager*)ADR_MEMMAN;
 SheetManager* shtman;
 Sheet* sht_back;
 Sheet* sht_win;
+Sheet* sht_win_b[3];
 Sheet* sht_mouse;
 
 int cursor_x = 8;
@@ -35,7 +36,7 @@ void update_mouse(int val);
 
 void update_timer(int val);
 
-void task_b_main(void);
+void task_b_main(Sheet* sht);
 
 void tmos_main(void) {
     init();
@@ -70,17 +71,6 @@ void init(void) {
 void init_mt(void) {
     task_a = task_init(memman);
     fifo.task = task_a;
-
-    Task* task_b = task_alloc();
-    task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-    task_b->tss.eip = (int)&task_b_main;
-    task_b->tss.es = 1 * 8;
-    task_b->tss.cs = 2 * 8;
-    task_b->tss.ss = 1 * 8;
-    task_b->tss.ds = 1 * 8;
-    task_b->tss.fs = 1 * 8;
-    task_b->tss.gs = 1 * 8;
-    task_run(task_b);
 }
 
 void activate(void) {
@@ -98,6 +88,37 @@ void activate(void) {
         sheet_updown(sht_back, 0);
     }
 
+    // multi window
+    {
+        for (int i = 0; i < 3; i++) {
+            sht_win_b[i] = sheet_alloc(shtman);
+            uchar* buf = (uchar*)memman_alloc_4k(memman, 144 * 52);
+            sheet_set_buf(sht_win_b[i], buf, 144, 52, -1);
+            uchar s[40];
+            sprintf(s, "task_b%d", i);
+            make_window(buf, 144, 52, s, 0);
+
+            Task* task = task_alloc();
+            task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+            task->tss.eip = (int)&task_b_main;
+            task->tss.es = 1 * 8;
+            task->tss.cs = 2 * 8;
+            task->tss.ss = 1 * 8;
+            task->tss.ds = 1 * 8;
+            task->tss.fs = 1 * 8;
+            task->tss.gs = 1 * 8;
+            *((int*)(task->tss.esp + 4)) = (int)sht_win_b[i];
+            task_run(task, i + 1);
+        }
+
+        sheet_slide(sht_win_b[0], 168, 56);
+        sheet_slide(sht_win_b[1], 8, 116);
+        sheet_slide(sht_win_b[2], 168, 116);
+        sheet_updown(sht_win_b[0], 1);
+        sheet_updown(sht_win_b[1], 2);
+        sheet_updown(sht_win_b[2], 3);
+    }
+
     // window
     {
         sht_win = sheet_alloc(shtman);
@@ -108,12 +129,12 @@ void activate(void) {
         if (!buf_win) {
             TMOS_ERROR("failed to allocate buf_win");
         }
-        sheet_set_buf(sht_win, buf_win, 160, 52, -1);
-        make_window(buf_win, 160, 52, "window");
-        make_textbox(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
+        sheet_set_buf(sht_win, buf_win, 144, 52, -1);
+        make_window(buf_win, 144, 52, "task_a", 1);
+        make_textbox(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 
-        sheet_slide(sht_win, 80, 72);
-        sheet_updown(sht_win, 1);
+        sheet_slide(sht_win, 8, 56);
+        sheet_updown(sht_win, 4);
     }
 
     // mouse
@@ -127,7 +148,7 @@ void activate(void) {
         minfo.y = (binfo->height - 28 - 16) / 2;
 
         sheet_slide(sht_mouse, minfo.x, minfo.y);
-        sheet_updown(sht_mouse, 2);
+        sheet_updown(sht_mouse, 5);
     }
 
     // memory info
@@ -135,10 +156,8 @@ void activate(void) {
         uint memtotal = memtest(0x00400000, 0xbfffffff);
         char membuf[40];
         sprintf(membuf, "memory_total: %dMB  free_total: %dKB", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
-        putstring(sht_back->buf, binfo->width, 4, 32, COL8_FFFFFF, membuf);
+        sheet_putstring(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, membuf, 40);
     }
-
-    sheet_refresh(sht_back, 0, 0, binfo->width, 48);
 }
 
 void update(void) {
@@ -167,7 +186,7 @@ void update_keyboard(int val) {
     char s[40];
     sprintf(s, "%02d", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
-    if (get_key(val) != 0 && cursor_x < 144) {
+    if (get_key(val) != 0 && cursor_x < 128) {
         s[0] = get_key(val);
         s[1] = 0;
         sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
@@ -225,17 +244,13 @@ void update_timer(int val) {
     }
 }
 
-void task_b_main() {
+void task_b_main(Sheet* sht) {
     FIFOData fifobuf[128];
     int count = 0, count0 = 0;
     char s[12];
 
     FIFO fifo;
     fifo_init(&fifo, 128, fifobuf, 0);
-
-    Timer* timer_put = timer_alloc();
-    timer_init(timer_put, &fifo, 1);
-    timer_settime(timer_put, 1);
 
     Timer* timer_1s = timer_alloc();
     timer_init(timer_1s, &fifo, 100);
@@ -249,16 +264,11 @@ void task_b_main() {
         } else {
             FIFOData data = fifo_get(&fifo);
             io_sti();
-            if (data.val == 1) {
-                sprintf(s, "%11d", count);
-                sheet_putstring(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
-                timer_settime(timer_put, 1);
-            } else if (data.val == 100) {
-                sprintf(s, "%11d", count - count0);
-                sheet_putstring(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
-                count0 = count;
-                timer_settime(timer_1s, 100);
-            }
+
+            sprintf(s, "%11d", count - count0);
+            sheet_putstring(sht, 24, 24, COL8_000000, COL8_C6C6C6, s, 11);
+            count0 = count;
+            timer_settime(timer_1s, 100);
         }
     }
 }

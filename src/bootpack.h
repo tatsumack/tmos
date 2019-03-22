@@ -275,7 +275,7 @@ void sheet_slide(Sheet* sht, int vx0, int vy0);
 void sheet_putstring(Sheet* sht, int x, int y, int c, int bg, char* s, int len);
 
 // window.c
-void make_window(uchar* buf, int width, int height, char* title);
+void make_window(uchar* buf, int width, int height, char* title, char isActive);
 
 void make_textbox(Sheet* sht, int x0, int y0, int sx, int sy, int c);
 
@@ -329,6 +329,7 @@ typedef enum TaskStatus {
 
 typedef struct Task {
     int segment;
+    int priority;
     TaskStatus status;
     TSS32 tss;
 } Task;
@@ -344,7 +345,7 @@ Task* task_init(MemoryManager* memman);
 
 Task* task_alloc(void);
 
-void task_run(Task* task);
+void task_run(Task* task, int priority);
 
 void task_switch(void);
 
