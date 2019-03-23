@@ -17,16 +17,23 @@ Task* task_init(MemoryManager* memman) {
         set_segmdesc(gdt + TASK_GDT0 + i, 103, (int)&taskman->tasks[i].tss, AR_TSS32);
     }
 
+    for (int i = 0; i < MAX_TASKLEVELS; i++) {
+        taskman->level[i].running = 0;
+        taskman->level[i].now = 0;
+    }
+    taskman->now_lv = 0;
+
     Task* task = task_alloc();
     task->status = taskstatus_running;
+    task->level = 0;
     task->priority = 2;
-    taskman->running = 1;
-    taskman->now = 0;
-    taskman->orders[0] = task;
+    task_add(task);
+    task_switch_level();
+
     load_tr(task->segment);
 
     task_timer = timer_alloc();
-    timer_settime(task_timer, 2);
+    timer_settime(task_timer, task->priority);
 
     return task;
 }
@@ -62,57 +69,100 @@ Task* task_alloc(void) {
 void task_sleep(Task* task) {
     if (task->status != taskstatus_running) return;
 
-    char needTaskSwitch = 0;
-    if (task == taskman->orders[taskman->now]) {
-        needTaskSwitch = 1;
-    }
-
-    int i;
-    for (i = 0; i < taskman->running; i++) {
-        if (taskman->orders[i] == task) {
-            // found
-            break;
-        }
-    }
-
-    taskman->running--;
-    if (i < taskman->now) {
-        taskman->now--;
-    }
-
-    for (; i < taskman->running; i++) {
-        taskman->orders[i] = taskman->orders[i + 1];
-    }
-
-    task->status = taskstatus_notused;
-
-    if (needTaskSwitch) {
-        if (taskman->now >= taskman->running) {
-            taskman->now = 0;
-        }
-        far_jmp(0, taskman->orders[taskman->now]->segment);
+    Task* now_task = task_now();
+    task_remove(task);
+    if (task == now_task) {
+        task_switch_level();
+        now_task = task_now();
+        far_jmp(0, now_task->segment);
     }
 }
 
-void task_run(Task* task, int priority) {
+void task_run(Task* task, int level, int priority) {
+    if (level < 0) {
+        level = task->level;
+    }
+
     if (priority > 0) {
         task->priority = priority;
     }
 
+    if (task->status == taskstatus_running && task->level != level) {
+        task_remove(task);
+    }
+
+    taskman->is_lv_change = 1;
+
     if (task->status == taskstatus_running) return;
-    task->status = taskstatus_running;
-    taskman->orders[taskman->running] = task;
-    taskman->running++;
+
+    task->level = level;
+    task_add(task);
 }
 
 void task_switch(void) {
-    taskman->now++;
-    taskman->now %= taskman->running;
+    TaskLevel* tl = &taskman->level[taskman->now_lv];
+    Task* now_task = tl->tasks[tl->now];
 
-    Task* task = taskman->orders[taskman->now];
-    timer_settime(task_timer, task->priority);
+    tl->now++;
+    if (tl->now >= tl->running) tl->now = 0;
 
-    if (taskman->running > 1) {
-        far_jmp(0, taskman->orders[taskman->now]->segment);
+    if (taskman->is_lv_change) {
+        task_switch_level();
+        tl = &taskman->level[taskman->now_lv];
     }
+
+    Task* new_task = tl->tasks[tl->now];
+    timer_settime(task_timer, new_task->priority);
+    if (new_task != now_task) {
+        far_jmp(0, new_task->segment);
+    }
+}
+
+Task* task_now(void) {
+    TaskLevel* tl = &taskman->level[taskman->now_lv];
+    return tl->tasks[tl->now];
+}
+
+void task_add(Task* task) {
+    TaskLevel* tl = &taskman->level[task->level];
+    tl->tasks[tl->running] = task;
+    tl->running++;
+    task->status = taskstatus_running;
+}
+
+void task_remove(Task* task) {
+    TaskLevel* tl = &taskman->level[task->level];
+
+    int i;
+    for (i = 0; i < tl->running; i++) {
+        if (tl->tasks[i] == task) {
+            break;
+        }
+    }
+
+    tl->running--;
+    if (i < tl->now) {
+        tl->now--;
+    }
+
+    if (tl->now >= tl->running) {
+        tl->now = 0;
+    }
+
+    task->status = taskstatus_notused;
+
+    for (; i < tl->running; i++) {
+        tl->tasks[i] = tl->tasks[i + 1];
+    }
+}
+
+void task_switch_level(void) {
+    for (int i = 0; i < MAX_TASKLEVELS; i++) {
+        if (taskman->level[i].running > 0) {
+            taskman->now_lv = i;
+            break;
+        }
+    }
+
+    taskman->is_lv_change = 0;
 }

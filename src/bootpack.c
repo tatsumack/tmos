@@ -71,6 +71,7 @@ void init(void) {
 void init_mt(void) {
     task_a = task_init(memman);
     fifo.task = task_a;
+    task_run(task_a, 1, 0);
 }
 
 void activate(void) {
@@ -108,7 +109,7 @@ void activate(void) {
             task->tss.fs = 1 * 8;
             task->tss.gs = 1 * 8;
             *((int*)(task->tss.esp + 4)) = (int)sht_win_b[i];
-            task_run(task, i + 1);
+            task_run(task, 2, i + 1);
         }
 
         sheet_slide(sht_win_b[0], 168, 56);

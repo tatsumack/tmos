@@ -313,6 +313,8 @@ void inthandler20(int* esp);
 // mtask.c
 #define MAX_TASKS 1000
 #define TASK_GDT0 3
+#define MAX_TASKS_LV 100
+#define MAX_TASKLEVELS 10
 
 typedef struct TSS32 {
     int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -329,15 +331,22 @@ typedef enum TaskStatus {
 
 typedef struct Task {
     int segment;
+    int level;
     int priority;
     TaskStatus status;
     TSS32 tss;
 } Task;
 
-typedef struct TaskManager {
+typedef struct TaskLevel {
     int running;
     int now;
-    Task* orders[MAX_TASKS];
+    Task* tasks[MAX_TASKS_LV];
+} TaskLevel;
+
+typedef struct TaskManager {
+    int now_lv;
+    char is_lv_change;
+    TaskLevel level[MAX_TASKLEVELS];
     Task tasks[MAX_TASKS];
 } TaskManager;
 
@@ -345,12 +354,19 @@ Task* task_init(MemoryManager* memman);
 
 Task* task_alloc(void);
 
-void task_run(Task* task, int priority);
+void task_run(Task* task, int level, int priority);
 
 void task_switch(void);
 
 void task_sleep(Task* task);
 
+Task* task_now(void);
+
+void task_add(Task* task);
+
+void task_remove(Task* task);
+
+void task_switch_level(void);
 
 // debug.c
 void tmos_error(char* s, char* file, int line);

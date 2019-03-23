@@ -34,7 +34,7 @@ int fifo_put(FIFO* fifo, FIFOData data) {
 
     if (fifo->task) {
         if (fifo->task->status != taskstatus_running) {
-            task_run(fifo->task, 0);
+            task_run(fifo->task, -1, 0);
         }
     }
     return 0;
