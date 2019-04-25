@@ -109,7 +109,7 @@ void activate(void) {
             task->tss.fs = 1 * 8;
             task->tss.gs = 1 * 8;
             *((int*)(task->tss.esp + 4)) = (int)sht_win_b[i];
-            task_run(task, 2, i + 1);
+            // task_run(task, 2, i + 1);
         }
 
         sheet_slide(sht_win_b[0], 168, 56);
