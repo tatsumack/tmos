@@ -23,6 +23,7 @@ int cursor_c = COL8_FFFFFF;
 int key_to = 0;
 
 Task* task_a;
+Task* task_cons;
 
 void init(void);
 
@@ -99,17 +100,17 @@ void activate(void) {
         make_window(buf, 256, 165, "console", 0);
         make_textbox(sht_cons, 8, 28, 240, 128, COL8_000000);
 
-        Task* task = task_alloc();
-        task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-        task->tss.eip = (int)&console_task;
-        task->tss.es = 1 * 8;
-        task->tss.cs = 2 * 8;
-        task->tss.ss = 1 * 8;
-        task->tss.ds = 1 * 8;
-        task->tss.fs = 1 * 8;
-        task->tss.gs = 1 * 8;
-        *((int*)(task->tss.esp + 4)) = (int)sht_cons;
-        task_run(task, 2, 2);
+        task_cons = task_alloc();
+        task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+        task_cons->tss.eip = (int)&console_task;
+        task_cons->tss.es = 1 * 8;
+        task_cons->tss.cs = 2 * 8;
+        task_cons->tss.ss = 1 * 8;
+        task_cons->tss.ds = 1 * 8;
+        task_cons->tss.fs = 1 * 8;
+        task_cons->tss.gs = 1 * 8;
+        *((int*)(task_cons->tss.esp + 4)) = (int)sht_cons;
+        task_run(task_cons, 2, 2);
 
         sheet_slide(sht_cons, 32, 4);
         sheet_updown(sht_cons, 1);
@@ -183,14 +184,28 @@ void update_keyboard(int val) {
     sprintf(s, "%02d", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
     if (get_key(val) != 0 && cursor_x < 128) {
-        s[0] = get_key(val);
-        s[1] = 0;
-        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
-        cursor_x += 8;
+        if (key_to == 0) {
+            s[0] = get_key(val);
+            s[1] = 0;
+            sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+            cursor_x += 8;
+        } else {
+            FIFOData data;
+            data.type = fifotype_keyboard;
+            data.val = val;
+            fifo_put(&task_cons->fifo, data);
+        }
     }
     if (val == 0x0e && cursor_x > 8) {
-        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
-        cursor_x -= 8;
+        if (key_to == 0) {
+            sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+            cursor_x -= 8;
+        } else {
+            FIFOData data;
+            data.type = fifotype_keyboard;
+            data.val = val;
+            fifo_put(&task_cons->fifo, data);
+        }
     }
     if (val == 0x0f) {
         if (key_to == 0) {
@@ -256,40 +271,53 @@ void update_timer(int val) {
 void console_task(Sheet* sht) {
     Task* task = task_now();
     FIFOData fifobuf[128];
-    FIFO fifo;
-    fifo_init(&fifo, 128, fifobuf, task);
+    fifo_init(&task->fifo, 128, fifobuf, task);
 
     Timer* timer = timer_alloc();
-    timer_init(timer, &fifo, 1);
+    timer_init(timer, &task->fifo, 1);
     timer_settime(timer, 50);
 
     int cursor_c = COL8_000000;
     int cursor_x = 8;
 
+    sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
+
+    char s[40];
     for (;;) {
         io_cli();
-        if (fifo_empty(&fifo)) {
+        if (fifo_empty(&task->fifo)) {
             task_sleep(task);
             io_stihlt();
         } else {
-            FIFOData data = fifo_get(&fifo);
+            FIFOData data = fifo_get(&task->fifo);
             io_sti();
 
             int val = data.val;
 
-            if (val <= 1) {
+            if (data.type == fifotype_timer) {
                 if (val == 1) {
-                    timer_init(timer, &fifo, 0);
+                    timer_init(timer, &task->fifo, 0);
                     cursor_c = COL8_FFFFFF;
                 } else {
-                    timer_init(timer, &fifo, 1);
+                    timer_init(timer, &task->fifo, 1);
                     cursor_c = COL8_000000;
                 }
-                TMOS_DEBUG("cusor_c %d", cursor_c);
                 timer_settime(timer, 50);
-                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-                sheet_refresh(sht, cursor_x, 28, cursor_x + 8, 44);
             }
+            if (data.type == fifotype_keyboard) {
+                if (get_key(val) != 0 && cursor_x < 240) {
+                    s[0] = get_key(val);
+                    s[1] = 0;
+                    sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+                    cursor_x += 8;
+                }
+                if (val == 0x0e && cursor_x > 16) {
+                    sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+                    cursor_x -= 8;
+                }
+            }
+            draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+            sheet_refresh(sht, cursor_x, 28, cursor_x + 8, 44);
         }
     }
 }

@@ -336,6 +336,7 @@ typedef struct Task {
     int level;
     int priority;
     TaskStatus status;
+    FIFO fifo;
     TSS32 tss;
 } Task;
 
