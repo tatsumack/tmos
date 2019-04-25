@@ -14,8 +14,8 @@ MemoryManager* memman = (MemoryManager*)ADR_MEMMAN;
 SheetManager* shtman;
 Sheet* sht_back;
 Sheet* sht_win;
-Sheet* sht_win_b[3];
 Sheet* sht_mouse;
+Sheet* sht_cons;
 
 int cursor_x = 8;
 int cursor_c = COL8_FFFFFF;
@@ -36,7 +36,7 @@ void update_mouse(int val);
 
 void update_timer(int val);
 
-void task_b_main(Sheet* sht);
+void console_task(Sheet* sht);
 
 void tmos_main(void) {
     init();
@@ -89,35 +89,28 @@ void activate(void) {
         sheet_updown(sht_back, 0);
     }
 
-    // multi window
+    // sht_cons
     {
-        for (int i = 0; i < 3; i++) {
-            sht_win_b[i] = sheet_alloc(shtman);
-            uchar* buf = (uchar*)memman_alloc_4k(memman, 144 * 52);
-            sheet_set_buf(sht_win_b[i], buf, 144, 52, -1);
-            uchar s[40];
-            sprintf(s, "task_b%d", i);
-            make_window(buf, 144, 52, s, 0);
+        sht_cons = sheet_alloc(shtman);
+        uchar* buf = (uchar*)memman_alloc_4k(memman, 256 * 165);
+        sheet_set_buf(sht_cons, buf, 256, 165, -1);
+        make_window(buf, 256, 165, "console", 0);
+        make_textbox(sht_cons, 8, 28, 240, 128, COL8_000000);
 
-            Task* task = task_alloc();
-            task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-            task->tss.eip = (int)&task_b_main;
-            task->tss.es = 1 * 8;
-            task->tss.cs = 2 * 8;
-            task->tss.ss = 1 * 8;
-            task->tss.ds = 1 * 8;
-            task->tss.fs = 1 * 8;
-            task->tss.gs = 1 * 8;
-            *((int*)(task->tss.esp + 4)) = (int)sht_win_b[i];
-            // task_run(task, 2, i + 1);
-        }
+        Task* task = task_alloc();
+        task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+        task->tss.eip = (int)&console_task;
+        task->tss.es = 1 * 8;
+        task->tss.cs = 2 * 8;
+        task->tss.ss = 1 * 8;
+        task->tss.ds = 1 * 8;
+        task->tss.fs = 1 * 8;
+        task->tss.gs = 1 * 8;
+        *((int*)(task->tss.esp + 4)) = (int)sht_cons;
+        task_run(task, 2, 2);
 
-        sheet_slide(sht_win_b[0], 168, 56);
-        sheet_slide(sht_win_b[1], 8, 116);
-        sheet_slide(sht_win_b[2], 168, 116);
-        sheet_updown(sht_win_b[0], 1);
-        sheet_updown(sht_win_b[1], 2);
-        sheet_updown(sht_win_b[2], 3);
+        sheet_slide(sht_cons, 32, 4);
+        sheet_updown(sht_cons, 1);
     }
 
     // window
@@ -134,8 +127,8 @@ void activate(void) {
         make_window(buf_win, 144, 52, "task_a", 1);
         make_textbox(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 
-        sheet_slide(sht_win, 8, 56);
-        sheet_updown(sht_win, 4);
+        sheet_slide(sht_win, 64, 56);
+        sheet_updown(sht_win, 2);
     }
 
     // mouse
@@ -149,7 +142,7 @@ void activate(void) {
         minfo.y = (binfo->height - 28 - 16) / 2;
 
         sheet_slide(sht_mouse, minfo.x, minfo.y);
-        sheet_updown(sht_mouse, 5);
+        sheet_updown(sht_mouse, 3);
     }
 
     // memory info
@@ -245,31 +238,43 @@ void update_timer(int val) {
     }
 }
 
-void task_b_main(Sheet* sht) {
+void console_task(Sheet* sht) {
+    Task* task = task_now();
     FIFOData fifobuf[128];
-    int count = 0, count0 = 0;
-    char s[12];
-
     FIFO fifo;
-    fifo_init(&fifo, 128, fifobuf, 0);
+    fifo_init(&fifo, 128, fifobuf, task);
 
-    Timer* timer_1s = timer_alloc();
-    timer_init(timer_1s, &fifo, 100);
-    timer_settime(timer_1s, 100);
+    Timer* timer = timer_alloc();
+    timer_init(timer, &fifo, 1);
+    timer_settime(timer, 50);
+
+    int cursor_c = COL8_000000;
+    int cursor_x = 8;
 
     for (;;) {
-        count++;
         io_cli();
         if (fifo_empty(&fifo)) {
+            task_sleep(task);
             io_stihlt();
         } else {
             FIFOData data = fifo_get(&fifo);
             io_sti();
 
-            sprintf(s, "%11d", count - count0);
-            sheet_putstring(sht, 24, 24, COL8_000000, COL8_C6C6C6, s, 11);
-            count0 = count;
-            timer_settime(timer_1s, 100);
+            int val = data.val;
+
+            if (val <= 1) {
+                if (val == 1) {
+                    timer_init(timer, &fifo, 0);
+                    cursor_c = COL8_FFFFFF;
+                } else {
+                    timer_init(timer, &fifo, 1);
+                    cursor_c = COL8_000000;
+                }
+                TMOS_DEBUG("cusor_c %d", cursor_c);
+                timer_settime(timer, 50);
+                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+                sheet_refresh(sht, cursor_x, 28, cursor_x + 8, 44);
+            }
         }
     }
 }
