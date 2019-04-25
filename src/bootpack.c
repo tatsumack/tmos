@@ -20,6 +20,8 @@ Sheet* sht_cons;
 int cursor_x = 8;
 int cursor_c = COL8_FFFFFF;
 
+int key_to = 0;
+
 Task* task_a;
 
 void init(void);
@@ -189,6 +191,19 @@ void update_keyboard(int val) {
     if (val == 0x0e && cursor_x > 8) {
         sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
         cursor_x -= 8;
+    }
+    if (val == 0x0f) {
+        if (key_to == 0) {
+            key_to = 1;
+            make_wtitle(sht_win->buf, sht_win->width, "task_a", 0);
+            make_wtitle(sht_cons->buf, sht_cons->width, "console", 1);
+        } else {
+            key_to = 0;
+            make_wtitle(sht_win->buf, sht_win->width, "task_a", 1);
+            make_wtitle(sht_cons->buf, sht_cons->width, "console", 0);
+        }
+        sheet_refresh(sht_win, 0, 0, sht_win->width, 21);
+        sheet_refresh(sht_cons, 0, 0, sht_cons->width, 21);
     }
 
     draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);

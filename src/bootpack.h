@@ -275,7 +275,9 @@ void sheet_slide(Sheet* sht, int vx0, int vy0);
 void sheet_putstring(Sheet* sht, int x, int y, int c, int bg, char* s, int len);
 
 // window.c
-void make_window(uchar* buf, int width, int height, char* title, char isActive);
+void make_window(uchar* buf, int width, int height, char* title, char is_active);
+
+void make_wtitle(uchar* buf, int width, char* title, char is_active);
 
 void make_textbox(Sheet* sht, int x0, int y0, int sx, int sy, int c);
 
