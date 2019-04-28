@@ -206,16 +206,21 @@ void update_keyboard(int val) {
             key_to = 1;
             make_wtitle(sht_win->buf, sht_win->width, "task_a", 0);
             make_wtitle(sht_cons->buf, sht_cons->width, "console", 1);
+            cursor_c = -1;
+            draw_rec(sht_win->buf, sht_win->width, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
         } else {
             key_to = 0;
             make_wtitle(sht_win->buf, sht_win->width, "task_a", 1);
             make_wtitle(sht_cons->buf, sht_cons->width, "console", 0);
+            cursor_c = COL8_000000;
         }
         sheet_refresh(sht_win, 0, 0, sht_win->width, 21);
         sheet_refresh(sht_cons, 0, 0, sht_cons->width, 21);
     }
 
-    draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+    if (cursor_c >= 0) {
+        draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+    }
     sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
 }
 
@@ -255,10 +260,14 @@ void update_timer(int val) {
         timer_init(timer_cursor, &fifo, val ^ 1);
         timer_settime(timer_cursor, 50);
 
-        cursor_c = val ? COL8_FFFFFF : COL8_000000;
+        if (cursor_c >= 0) {
+            cursor_c = val ? COL8_FFFFFF : COL8_000000;
+        }
 
-        draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        if (cursor_c >= 0) {
+            draw_rec(sht_win->buf, sht_win->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+            sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        }
     }
 }
 
