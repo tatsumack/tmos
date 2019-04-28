@@ -184,7 +184,7 @@ void update_keyboard(int val) {
     sprintf(s, "%02x", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
 
-    if (key_to == 1 && (get_key(val) != 0 || val == 0x0e)) {
+    if (key_to == 1 && (get_key(val) != 0 || val == 0x0e || val == 0x1c)) {
         FIFOData data;
         data.type = fifotype_keyboard;
         data.val = val;
@@ -288,6 +288,7 @@ void console_task(Sheet* sht) {
 
     int cursor_c = -1;
     int cursor_x = 16;
+    int cursor_y = 28;
 
     sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
@@ -321,24 +322,30 @@ void console_task(Sheet* sht) {
                 if (get_key(val) != 0 && cursor_x < 240) {
                     s[0] = get_key(val);
                     s[1] = 0;
-                    sheet_putstring(sht, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
                     cursor_x += 8;
                 }
                 if (val == 0x0e && cursor_x > 16) {
-                    sheet_putstring(sht, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
+                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
+                }
+                if (val == 0x1c) {
+                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+                    cursor_y += 16;
+                    sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
+                    cursor_x = 16;
                 }
                 if (val == 0x0f) {
                     cursor_c = cursor_c >= 0 ? -1 : COL8_FFFFFF;
                     if (cursor_c == -1) {
-                        draw_rec(sht->buf, sht->width, COL8_000000, cursor_x, 28, cursor_x + 7, 43);
+                        draw_rec(sht->buf, sht->width, COL8_000000, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
                     }
                 }
             }
             if (cursor_c >= 0) {
-                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
             }
-            sheet_refresh(sht, cursor_x, 28, cursor_x + 8, 44);
+            sheet_refresh(sht, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
         }
     }
 }
