@@ -329,7 +329,7 @@ void console_task(Sheet* sht) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
                 }
-                if (val == 0x1c) {
+                if (val == 0x1c && cursor_y < 28 + 112) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_y += 16;
                     sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
