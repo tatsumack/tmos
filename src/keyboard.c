@@ -51,5 +51,13 @@ char get_key(int code) {
                                         0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0,   0,   0,   0,
                                         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                         0,   0,   0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0};
-    return key_shift > 0 ? keytable_shift[code] : keytable[code];
+
+    char c = key_shift > 0 ? keytable_shift[code] : keytable[code];
+    if ('A' <= c && c <= 'Z') {
+        if (key_shift == 0) {
+            c += 0x20;
+        }
+    }
+
+    return c;
 }
