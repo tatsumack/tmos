@@ -181,7 +181,7 @@ void update(void) {
 
 void update_keyboard(int val) {
     char s[40];
-    sprintf(s, "%02d", val);
+    sprintf(s, "%02x", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
     if (get_key(val) != 0 && cursor_x < 128) {
         if (key_to == 0) {
@@ -195,6 +195,7 @@ void update_keyboard(int val) {
             data.val = val;
             fifo_put(&task_cons->fifo, data);
         }
+        return;
     }
     if (val == 0x0e && cursor_x > 8) {
         if (key_to == 0) {
