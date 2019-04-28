@@ -278,7 +278,7 @@ void console_task(Sheet* sht) {
     timer_settime(timer, 50);
 
     int cursor_c = COL8_000000;
-    int cursor_x = 8;
+    int cursor_x = 16;
 
     sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
@@ -308,11 +308,11 @@ void console_task(Sheet* sht) {
                 if (get_key(val) != 0 && cursor_x < 240) {
                     s[0] = get_key(val);
                     s[1] = 0;
-                    sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+                    sheet_putstring(sht, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
                     cursor_x += 8;
                 }
                 if (val == 0x0e && cursor_x > 16) {
-                    sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+                    sheet_putstring(sht, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
                 }
             }
