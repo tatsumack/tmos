@@ -329,9 +329,24 @@ void console_task(Sheet* sht) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
                 }
-                if (val == 0x1c && cursor_y < 28 + 112) {
+                if (val == 0x1c) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-                    cursor_y += 16;
+                    if (cursor_y < 28 + 112) {
+                        cursor_y += 16;
+                    } else {
+                        // scroll
+                        for (int y = 28; y < 28 + 112; y++) {
+                            for (int x = 8; x < 8 + 240; x++) {
+                                sht->buf[x + y * sht->width] = sht->buf[x + (y + 16) * sht->width];
+                            }
+                        }
+                        for (int y = 28 + 112; y < 28 + 128; y++) {
+                            for (int x = 8; x < 8 + 240; x++) {
+                                sht->buf[x + y * sht->width] = COL8_000000;
+                            }
+                        }
+                        sheet_refresh(sht, 8, 28, 8 + 240, 28 + 128);
+                    }
                     sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
                     cursor_x = 16;
                 }
