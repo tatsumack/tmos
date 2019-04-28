@@ -214,6 +214,12 @@ void update_keyboard(int val) {
             make_wtitle(sht_cons->buf, sht_cons->width, "console", 0);
             cursor_c = COL8_000000;
         }
+
+        FIFOData data;
+        data.type = fifotype_keyboard;
+        data.val = val;
+        fifo_put(&task_cons->fifo, data);
+
         sheet_refresh(sht_win, 0, 0, sht_win->width, 21);
         sheet_refresh(sht_cons, 0, 0, sht_cons->width, 21);
     }
@@ -280,7 +286,7 @@ void console_task(Sheet* sht) {
     timer_init(timer, &task->fifo, 1);
     timer_settime(timer, 50);
 
-    int cursor_c = COL8_000000;
+    int cursor_c = -1;
     int cursor_x = 16;
 
     sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
@@ -300,10 +306,14 @@ void console_task(Sheet* sht) {
             if (data.type == fifotype_timer) {
                 if (val == 1) {
                     timer_init(timer, &task->fifo, 0);
-                    cursor_c = COL8_FFFFFF;
+                    if (cursor_c >= 0) {
+                        cursor_c = COL8_FFFFFF;
+                    }
                 } else {
                     timer_init(timer, &task->fifo, 1);
-                    cursor_c = COL8_000000;
+                    if (cursor_c >= 0) {
+                        cursor_c = COL8_000000;
+                    }
                 }
                 timer_settime(timer, 50);
             }
@@ -318,8 +328,16 @@ void console_task(Sheet* sht) {
                     sheet_putstring(sht, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
                 }
+                if (val == 0x0f) {
+                    cursor_c = cursor_c >= 0 ? -1 : COL8_FFFFFF;
+                    if (cursor_c == -1) {
+                        draw_rec(sht->buf, sht->width, COL8_000000, cursor_x, 28, cursor_x + 7, 43);
+                    }
+                }
             }
-            draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+            if (cursor_c >= 0) {
+                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+            }
             sheet_refresh(sht, cursor_x, 28, cursor_x + 8, 44);
         }
     }
