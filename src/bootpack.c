@@ -183,30 +183,23 @@ void update_keyboard(int val) {
     char s[40];
     sprintf(s, "%02x", val);
     sheet_putstring(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 4);
-    if (get_key(val) != 0 && cursor_x < 128) {
-        if (key_to == 0) {
-            s[0] = get_key(val);
-            s[1] = 0;
-            sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
-            cursor_x += 8;
-        } else {
-            FIFOData data;
-            data.type = fifotype_keyboard;
-            data.val = val;
-            fifo_put(&task_cons->fifo, data);
-        }
+
+    if (key_to == 1 && (get_key(val) != 0 || val == 0x0e)) {
+        FIFOData data;
+        data.type = fifotype_keyboard;
+        data.val = val;
+        fifo_put(&task_cons->fifo, data);
         return;
     }
+    if (get_key(val) != 0 && cursor_x < 128) {
+        s[0] = get_key(val);
+        s[1] = 0;
+        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+        cursor_x += 8;
+    }
     if (val == 0x0e && cursor_x > 8) {
-        if (key_to == 0) {
-            sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
-            cursor_x -= 8;
-        } else {
-            FIFOData data;
-            data.type = fifotype_keyboard;
-            data.val = val;
-            fifo_put(&task_cons->fifo, data);
-        }
+        sheet_putstring(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+        cursor_x -= 8;
     }
     if (val == 0x0f) {
         if (key_to == 0) {
