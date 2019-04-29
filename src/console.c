@@ -19,6 +19,8 @@ void console_task(Sheet* sht) {
 
     sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, "$ ", 2);
 
+    FileInfo* finfo = (FileInfo*)(ADR_DISKIMG + 0x002600);
+
     char s[40], cmdline[30];
     for (;;) {
         io_cli();
@@ -78,6 +80,22 @@ void console_task(Sheet* sht) {
                         }
                         sheet_refresh(sht, 8, 28, 8 + 240, 28 + 120);
                         cursor_y = 28;
+                    } else if (strcmp(cmdline, "ls") == 0) {
+                        for (int x = 0; x < 224; x++) {
+                            if (finfo[x].name[0] == 0x00) break;
+                            if (finfo[x].name[0] == 0xe5) continue;
+                            if ((finfo[x].type & 0x18) != 0) continue;
+                            sprintf(s, "filename.ext %7d", finfo[x].size);
+                            for (int y = 0; y < 8; y++) {
+                                s[y] = finfo[x].name[y];
+                            }
+                            s[9] = finfo[x].ext[0];
+                            s[10] = finfo[x].ext[1];
+                            s[11] = finfo[x].ext[2];
+                            sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+                            cursor_y = cons_newline(cursor_y, sht);
+                        }
+                        cursor_y = cons_newline(cursor_y, sht);
                     } else if (cmdline[0] != 0) {
                         sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
                         cursor_y = cons_newline(cursor_y, sht);

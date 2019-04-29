@@ -3,6 +3,7 @@
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
+typedef unsigned short ushort;
 
 #define COL8_000000        0
 #define COL8_FF0000        1
@@ -23,6 +24,7 @@ typedef unsigned char uchar;
 
 #define ADR_BOOTINFO    0x00000ff0
 #define ADR_MEMMAN      0x003c0000
+#define ADR_DISKIMG     0x00100000
 
 typedef struct BootInfo {
     char cyles, leds, vmode, reserve;
@@ -374,10 +376,16 @@ void task_switch_level(void);
 void task_idle(void);
 
 // console.c
+typedef struct FileInfo {
+    uchar name[8], ext[3], type;
+    char reserve[10];
+    ushort time, date, clustno;
+    uint size;
+} FileInfo;
+
 void console_task(Sheet* sht);
 
 int cons_newline(int cursor_y, Sheet* sht);
-
 
 // debug.c
 void tmos_error(char* s, char* file, int line);
