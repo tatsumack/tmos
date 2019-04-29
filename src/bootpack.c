@@ -1,5 +1,6 @@
 #include "bootpack.h"
 #include <stdio.h>
+#include <string.h>
 
 extern TimerManager timerman;
 extern Timer* timer_cursor;
@@ -40,6 +41,8 @@ void update_mouse(int val);
 void update_timer(int val);
 
 void console_task(Sheet* sht);
+
+int cons_newline(int cursor_y, Sheet* sht);
 
 void tmos_main(void) {
     init();
@@ -147,9 +150,6 @@ void activate(void) {
         sheet_slide(sht_mouse, minfo.x, minfo.y);
         sheet_updown(sht_mouse, 3);
     }
-
-    // memory info
-    { uint memtotal = memtest(0x00400000, 0xbfffffff); }
 }
 
 void update(void) {
@@ -266,12 +266,12 @@ void console_task(Sheet* sht) {
     timer_settime(timer, 50);
 
     int cursor_c = -1;
-    int cursor_x = 16;
+    int cursor_x = 24;
     int cursor_y = 28;
 
-    sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
+    sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, "$ ", 2);
 
-    char s[40];
+    char s[40], cmdline[30];
     for (;;) {
         io_cli();
         if (fifo_empty(&task->fifo)) {
@@ -301,33 +301,35 @@ void console_task(Sheet* sht) {
                 if (get_key(val) != 0 && cursor_x < 240) {
                     s[0] = get_key(val);
                     s[1] = 0;
+                    cmdline[cursor_x / 8 - 3] = get_key(val);
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
                     cursor_x += 8;
                 }
-                if (val == 0x0e && cursor_x > 16) {
+                if (val == 0x0e && cursor_x > 24) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
                     cursor_x -= 8;
                 }
                 if (val == 0x1c) {
                     sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-                    if (cursor_y < 28 + 112) {
-                        cursor_y += 16;
-                    } else {
-                        // scroll
-                        for (int y = 28; y < 28 + 112; y++) {
-                            for (int x = 8; x < 8 + 240; x++) {
-                                sht->buf[x + y * sht->width] = sht->buf[x + (y + 16) * sht->width];
-                            }
-                        }
-                        for (int y = 28 + 112; y < 28 + 128; y++) {
-                            for (int x = 8; x < 8 + 240; x++) {
-                                sht->buf[x + y * sht->width] = COL8_000000;
-                            }
-                        }
-                        sheet_refresh(sht, 8, 28, 8 + 240, 28 + 128);
+                    cmdline[cursor_x / 8 - 3] = 0;
+                    cursor_y = cons_newline(cursor_y, sht);
+                    if (strcmp(cmdline, "mem") == 0) {
+                        uint memtotal = memtest(0x00400000, 0xbfffffff);
+                        sprintf(s, "total %dMB", memtotal / (1024 * 1024));
+                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+                        cursor_y = cons_newline(cursor_y, sht);
+                        sprintf(s, "free %dKB", memman_total_free_size(memman) / 1024);
+                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+                        cursor_y = cons_newline(cursor_y, sht);
+                        cursor_y = cons_newline(cursor_y, sht);
+                    } else if (cmdline[0] != 0) {
+                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
+                        cursor_y = cons_newline(cursor_y, sht);
+                        cursor_y = cons_newline(cursor_y, sht);
                     }
-                    sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
-                    cursor_x = 16;
+
+                    sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "$ ", 2);
+                    cursor_x = 24;
                 }
                 if (val == 0x0f) {
                     cursor_c = cursor_c >= 0 ? -1 : COL8_FFFFFF;
@@ -342,4 +344,25 @@ void console_task(Sheet* sht) {
             sheet_refresh(sht, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
         }
     }
+}
+
+int cons_newline(int cursor_y, Sheet* sht) {
+    if (cursor_y < 28 + 112) {
+        cursor_y += 16;
+    } else {
+        // scroll
+        for (int y = 28; y < 28 + 112; y++) {
+            for (int x = 8; x < 8 + 240; x++) {
+                sht->buf[x + y * sht->width] = sht->buf[x + (y + 16) * sht->width];
+            }
+        }
+        for (int y = 28 + 112; y < 28 + 128; y++) {
+            for (int x = 8; x < 8 + 240; x++) {
+                sht->buf[x + y * sht->width] = COL8_000000;
+            }
+        }
+        sheet_refresh(sht, 8, 28, 8 + 240, 28 + 128);
+    }
+
+    return cursor_y;
 }
