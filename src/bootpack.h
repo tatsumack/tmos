@@ -373,6 +373,12 @@ void task_switch_level(void);
 
 void task_idle(void);
 
+// console.c
+void console_task(Sheet* sht);
+
+int cons_newline(int cursor_y, Sheet* sht);
+
+
 // debug.c
 void tmos_error(char* s, char* file, int line);
 void tmos_debug(char* s, char* file, int line);
