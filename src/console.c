@@ -96,6 +96,53 @@ void console_task(Sheet* sht) {
                             cursor_y = cons_newline(cursor_y, sht);
                         }
                         cursor_y = cons_newline(cursor_y, sht);
+                    } else if (cmdline[0] == 'c' && cmdline[1] == 'a' && cmdline[2] == 't' && cmdline[3] == ' ') {
+                        for (int i = 0; i < 11; i++) s[i] = ' ';
+                        int i = 0;
+                        for (int j = 4; i < 11 && cmdline[j] != 0; j++) {
+                            if (cmdline[j] == '.' && i <= 8) {
+                                i = 8;
+                            } else {
+                                s[i] = cmdline[j];
+                                if ('a' <= s[i] && s[i] <= 'z') s[i] -= 0x20;
+                                i++;
+                            }
+                        }
+
+                        int x = 0;
+                        for (x = 0; x < 224;) {
+                            if (finfo[x].name[0] == 0x00) break;
+                            if ((finfo[x].type & 0x18) == 0) {
+                                char found = 1;
+                                for (int y = 0; y < 11; y++) {
+                                    if (finfo[x].name[y] != s[y]) {
+                                        found = 0;
+                                        break;
+                                    }
+                                }
+                                if (found) break;
+                            }
+                            x++;
+                        }
+
+                        if (x < 224 && finfo[x].name[0] != 0x00) {
+                            char* p = (char*)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);
+                            cursor_x = 8;
+                            for (int i = 0; i < finfo[x].size; i++) {
+                                s[0] = p[i];
+                                s[1] = 0;
+                                sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+                                cursor_x += 8;
+                                if (cursor_x == 8 + 240) {
+                                    cursor_x = 8;
+                                    cursor_y = cons_newline(cursor_y, sht);
+                                }
+                            }
+                        } else {
+                            sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
+                            cursor_y = cons_newline(cursor_y, sht);
+                        }
+                        cursor_y = cons_newline(cursor_y, sht);
                     } else if (cmdline[0] != 0) {
                         sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
                         cursor_y = cons_newline(cursor_y, sht);
