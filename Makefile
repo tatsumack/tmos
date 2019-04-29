@@ -26,6 +26,8 @@ ${BIN_PATH}/tmos.sys: ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin
 ${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys
 	mformat -f 1440 -C -B ${BIN_PATH}/ipl.bin -i ${BIN_PATH}/tmos.img ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/tmos.sys ::
+	mcopy -i ${BIN_PATH}/tmos.img ${SRC_PATH}/ipl.asm ::
+	mcopy -i ${BIN_PATH}/tmos.img Makefile ::
 
 run: ${BIN_PATH}/tmos.img
 	qemu-system-i386 -m 32 -drive file=${BIN_PATH}/tmos.img,format=raw,index=0,if=floppy
