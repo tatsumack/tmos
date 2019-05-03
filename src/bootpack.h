@@ -387,6 +387,10 @@ void console_task(Sheet* sht);
 
 int cons_newline(int cursor_y, Sheet* sht);
 
+void file_readfat(int* fat, uchar* img);
+void file_loadfile(int clustno, int size, char* buf, int* fat, char* img);
+
+
 // debug.c
 void tmos_error(char* s, char* file, int line);
 void tmos_debug(char* s, char* file, int line);
