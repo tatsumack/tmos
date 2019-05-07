@@ -26,3 +26,39 @@ void file_loadfile(int clustno, int size, char* buf, int* fat, char* img) {
         clustno = fat[clustno];
     }
 }
+
+FileInfo* file_search(char* name, FileInfo* finfo, int max) {
+    char s[12];
+    for (int j = 0; j < 11; j++) s[j] = ' ';
+    int j = 0;
+    for (int i = 0; name[i] != 0; i++) {
+        if (j >= 11) return 0;
+        if (name[i] == '.' && j <= 8) {
+            j = 8;
+        } else {
+            s[j] = name[i];
+            if ('a' <= s[j] && s[j] <= 'z') s[j] -= 0x20;
+            j++;
+        }
+    }
+
+    int x = 0;
+    for (x = 0; x < max;) {
+        if (finfo[x].name[0] == 0x00) break;
+        if ((finfo[x].type & 0x18) == 0) {
+            char found = 1;
+            for (int y = 0; y < 11; y++) {
+                if (finfo[x].name[y] != s[y]) {
+                    found = 0;
+                    break;
+                }
+            }
+            if (found) {
+                return finfo + x;
+            }
+        }
+        x++;
+    }
+
+    return 0;
+}

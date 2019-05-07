@@ -385,11 +385,10 @@ typedef struct FileInfo {
 
 void console_task(Sheet* sht);
 
-int cons_newline(int cursor_y, Sheet* sht);
-
 // file.c
 void file_readfat(int* fat, uchar* img);
 void file_loadfile(int clustno, int size, char* buf, int* fat, char* img);
+FileInfo* file_search(char* name, FileInfo* finfo, int max);
 
 
 // debug.c

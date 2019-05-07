@@ -4,6 +4,22 @@
 
 extern MemoryManager* memman;
 
+typedef struct Console {
+    Sheet* sht;
+    int cur_x, cur_y, cur_c;
+} Console;
+
+void cons_putchar(Console* cons, int chr, char move);
+void cons_newline(Console* cons);
+void cons_runcmd(char* cmdline, Console* cons);
+
+void cmd_mem(Console* cons);
+void cmd_clear(Console* cons);
+void cmd_ls(Console* cons);
+void cmd_cat(Console* cons, char* cmdline);
+
+int* fat = NULL;
+
 void console_task(Sheet* sht) {
     Task* task = task_now();
     FIFOData fifobuf[128];
@@ -13,15 +29,15 @@ void console_task(Sheet* sht) {
     timer_init(timer, &task->fifo, 1);
     timer_settime(timer, 50);
 
-    int cursor_c = -1;
-    int cursor_x = 24;
-    int cursor_y = 28;
+    Console cons;
+    cons.sht = sht;
+    cons.cur_c = -1;
+    cons.cur_x = 24;
+    cons.cur_y = 28;
 
     sheet_putstring(sht, 8, 28, COL8_FFFFFF, COL8_000000, "$ ", 2);
 
-    FileInfo* finfo = (FileInfo*)(ADR_DISKIMG + 0x002600);
-
-    int* fat = (int*)memman_alloc_4k(memman, 4 * 2880);
+    fat = (int*)memman_alloc_4k(memman, 4 * 2880);
     file_readfat(fat, (uchar*)(ADR_DISKIMG + 0x000200));
 
     char s[40], cmdline[30];
@@ -39,177 +55,174 @@ void console_task(Sheet* sht) {
             if (data.type == fifotype_timer) {
                 if (val == 1) {
                     timer_init(timer, &task->fifo, 0);
-                    if (cursor_c >= 0) {
-                        cursor_c = COL8_FFFFFF;
+                    if (cons.cur_c >= 0) {
+                        cons.cur_c = COL8_FFFFFF;
                     }
                 } else {
                     timer_init(timer, &task->fifo, 1);
-                    if (cursor_c >= 0) {
-                        cursor_c = COL8_000000;
+                    if (cons.cur_c >= 0) {
+                        cons.cur_c = COL8_000000;
                     }
                 }
                 timer_settime(timer, 50);
             }
             if (data.type == fifotype_keyboard) {
-                if (get_key(val) != 0 && cursor_x < 240) {
-                    s[0] = get_key(val);
-                    s[1] = 0;
-                    cmdline[cursor_x / 8 - 3] = get_key(val);
-                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-                    cursor_x += 8;
+                if (get_key(val) != 0 && cons.cur_x < 240) {
+                    cmdline[cons.cur_x / 8 - 3] = get_key(val);
+                    cons_putchar(&cons, get_key(val), 1);
                 }
-                if (val == 0x0e && cursor_x > 24) {
-                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-                    cursor_x -= 8;
+                if (val == 0x0e && cons.cur_x > 24) {
+                    cons_putchar(&cons, ' ', 0);
+                    cons.cur_x -= 8;
                 }
                 if (val == 0x1c) {
-                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-                    cmdline[cursor_x / 8 - 3] = 0;
-                    cursor_y = cons_newline(cursor_y, sht);
-                    if (strcmp(cmdline, "mem") == 0) {
-                        uint memtotal = memtest(0x00400000, 0xbfffffff);
-                        sprintf(s, "total %dMB", memtotal / (1024 * 1024));
-                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
-                        cursor_y = cons_newline(cursor_y, sht);
-                        sprintf(s, "free %dKB", memman_total_free_size(memman) / 1024);
-                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
-                        cursor_y = cons_newline(cursor_y, sht);
-                        cursor_y = cons_newline(cursor_y, sht);
-                    } else if (strcmp(cmdline, "clear") == 0) {
-                        for (int y = 28; y < 28 + 128; y++) {
-                            for (int x = 8; x < 8 + 240; x++) {
-                                sht->buf[x + y * sht->width] = COL8_000000;
-                            }
-                        }
-                        sheet_refresh(sht, 8, 28, 8 + 240, 28 + 120);
-                        cursor_y = 28;
-                    } else if (strcmp(cmdline, "ls") == 0) {
-                        for (int x = 0; x < 224; x++) {
-                            if (finfo[x].name[0] == 0x00) break;
-                            if (finfo[x].name[0] == 0xe5) continue;
-                            if ((finfo[x].type & 0x18) != 0) continue;
-                            sprintf(s, "filename.ext %7d", finfo[x].size);
-                            for (int y = 0; y < 8; y++) {
-                                s[y] = finfo[x].name[y];
-                            }
-                            s[9] = finfo[x].ext[0];
-                            s[10] = finfo[x].ext[1];
-                            s[11] = finfo[x].ext[2];
-                            sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
-                            cursor_y = cons_newline(cursor_y, sht);
-                        }
-                        cursor_y = cons_newline(cursor_y, sht);
-                    } else if (strncmp(cmdline, "cat ", 4) == 0) {
-                        for (int i = 0; i < 11; i++) s[i] = ' ';
-                        int i = 0;
-                        for (int j = 4; i < 11 && cmdline[j] != 0; j++) {
-                            if (cmdline[j] == '.' && i <= 8) {
-                                i = 8;
-                            } else {
-                                s[i] = cmdline[j];
-                                if ('a' <= s[i] && s[i] <= 'z') s[i] -= 0x20;
-                                i++;
-                            }
-                        }
-
-                        int x = 0;
-                        for (x = 0; x < 224;) {
-                            if (finfo[x].name[0] == 0x00) break;
-                            if ((finfo[x].type & 0x18) == 0) {
-                                char found = 1;
-                                for (int y = 0; y < 11; y++) {
-                                    if (finfo[x].name[y] != s[y]) {
-                                        found = 0;
-                                        break;
-                                    }
-                                }
-                                if (found) break;
-                            }
-                            x++;
-                        }
-
-                        if (x < 224 && finfo[x].name[0] != 0x00) {
-                            char* p = (char*)memman_alloc_4k(memman, finfo[x].size);
-                            file_loadfile(finfo[x].clustno, finfo[x].size, p, fat, (char*)(ADR_DISKIMG + 0x003e00));
-                            cursor_x = 8;
-                            for (int i = 0; i < finfo[x].size; i++) {
-                                s[0] = p[i];
-                                s[1] = 0;
-                                if (s[0] == 0x09) {
-                                    // tab
-                                    for (;;) {
-                                        sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-                                        cursor_x += 8;
-                                        if (cursor_x == 8 + 240) {
-                                            cursor_x = 8;
-                                            cursor_y = cons_newline(cursor_y, sht);
-                                        }
-                                        if (((cursor_x - 8) & 0x1f) == 0) {
-                                            break;
-                                        }
-                                    }
-                                } else if (s[0] == 0x0a) {
-                                    // LF
-                                    cursor_x = 8;
-                                    cursor_y = cons_newline(cursor_y, sht);
-                                } else if (s[0] == 0x0d) {
-                                    // CR
-                                } else {
-                                    sheet_putstring(sht, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-                                    cursor_x += 8;
-                                    if (cursor_x == 8 + 240) {
-                                        cursor_x = 8;
-                                        cursor_y = cons_newline(cursor_y, sht);
-                                    }
-                                }
-                            }
-                            memman_free_4k(memman, (int)p, finfo[x].size);
-                        } else {
-                            sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
-                            cursor_y = cons_newline(cursor_y, sht);
-                        }
-                        cursor_y = cons_newline(cursor_y, sht);
-                    } else if (cmdline[0] != 0) {
-                        sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
-                        cursor_y = cons_newline(cursor_y, sht);
-                        cursor_y = cons_newline(cursor_y, sht);
-                    }
-
-                    sheet_putstring(sht, 8, cursor_y, COL8_FFFFFF, COL8_000000, "$ ", 2);
-                    cursor_x = 24;
+                    cons_putchar(&cons, ' ', 0);
+                    cmdline[cons.cur_x / 8 - 3] = 0;
+                    cons_newline(&cons);
+                    cons_runcmd(cmdline, &cons);
+                    cons_putchar(&cons, '$', 1);
+                    cons_putchar(&cons, ' ', 1);
                 }
                 if (val == 0x0f) {
-                    cursor_c = cursor_c >= 0 ? -1 : COL8_FFFFFF;
-                    if (cursor_c == -1) {
-                        draw_rec(sht->buf, sht->width, COL8_000000, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
+                    cons.cur_c = cons.cur_c >= 0 ? -1 : COL8_FFFFFF;
+                    if (cons.cur_c == -1) {
+                        draw_rec(sht->buf, sht->width, COL8_000000, cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
                     }
                 }
             }
-            if (cursor_c >= 0) {
-                draw_rec(sht->buf, sht->width, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
+            if (cons.cur_y >= 0) {
+                draw_rec(sht->buf, sht->width, cons.cur_c, cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
             }
-            sheet_refresh(sht, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
+            sheet_refresh(sht, cons.cur_x, cons.cur_y, cons.cur_x + 8, cons.cur_y + 16);
         }
     }
 }
 
-int cons_newline(int cursor_y, Sheet* sht) {
-    if (cursor_y < 28 + 112) {
-        cursor_y += 16;
+void cons_putchar(Console* cons, int chr, char move) {
+    char s[2];
+    s[0] = chr;
+    s[1] = 0;
+
+    if (s[0] == 0x09) {
+        // tab
+        for (;;) {
+            sheet_putstring(cons->sht, cons->cur_x, cons->cur_y, COL8_FFFFFF, COL8_000000, " ", 1);
+            cons->cur_x += 8;
+            if (cons->cur_x == 8 + 240) {
+                cons_newline(cons);
+            }
+            if (((cons->cur_x - 8) & 0x1f) == 0) {
+                break;
+            }
+        }
+    } else if (s[0] == 0x0a) {
+        // LF
+        cons_newline(cons);
+    } else if (s[0] == 0x0d) {
+        // CR
+    } else {
+        sheet_putstring(cons->sht, cons->cur_x, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 1);
+        if (move > 0) {
+            cons->cur_x += 8;
+            if (cons->cur_x == 8 + 240) {
+                cons_newline(cons);
+            }
+        }
+    }
+}
+
+void cons_newline(Console* cons) {
+    if (cons->cur_y < 28 + 112) {
+        cons->cur_y += 16;
     } else {
         // scroll
         for (int y = 28; y < 28 + 112; y++) {
             for (int x = 8; x < 8 + 240; x++) {
-                sht->buf[x + y * sht->width] = sht->buf[x + (y + 16) * sht->width];
+                cons->sht->buf[x + y * cons->sht->width] = cons->sht->buf[x + (y + 16) * cons->sht->width];
             }
         }
         for (int y = 28 + 112; y < 28 + 128; y++) {
             for (int x = 8; x < 8 + 240; x++) {
-                sht->buf[x + y * sht->width] = COL8_000000;
+                cons->sht->buf[x + y * cons->sht->width] = COL8_000000;
             }
         }
-        sheet_refresh(sht, 8, 28, 8 + 240, 28 + 128);
+        sheet_refresh(cons->sht, 8, 28, 8 + 240, 28 + 128);
     }
+    cons->cur_x = 8;
+}
 
-    return cursor_y;
+void cons_runcmd(char* cmdline, Console* cons) {
+    if (strcmp(cmdline, "mem") == 0) {
+        cmd_mem(cons);
+    } else if (strcmp(cmdline, "clear") == 0) {
+        cmd_clear(cons);
+    } else if (strcmp(cmdline, "ls") == 0) {
+        cmd_ls(cons);
+    } else if (strncmp(cmdline, "cat ", 4) == 0) {
+        cmd_cat(cons, cmdline);
+    } else if (cmdline[0] != 0) {
+        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
+        cons_newline(cons);
+        cons_newline(cons);
+    }
+}
+
+void cmd_mem(Console* cons) {
+    uint memtotal = memtest(0x00400000, 0xbfffffff);
+
+    char s[30];
+    sprintf(s, "total %dMB", memtotal / (1024 * 1024));
+    sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
+    cons_newline(cons);
+    sprintf(s, "free %dKB", memman_total_free_size(memman) / 1024);
+    sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
+    cons_newline(cons);
+    cons_newline(cons);
+}
+
+void cmd_clear(Console* cons) {
+    for (int y = 28; y < 28 + 128; y++) {
+        for (int x = 8; x < 8 + 240; x++) {
+            cons->sht->buf[x + y * cons->sht->width] = COL8_000000;
+        }
+    }
+    sheet_refresh(cons->sht, 8, 28, 8 + 240, 28 + 120);
+    cons->cur_y = 28;
+}
+
+void cmd_ls(Console* cons) {
+    FileInfo* finfo = (FileInfo*)(ADR_DISKIMG + 0x002600);
+    char s[30];
+
+    for (int x = 0; x < 224; x++) {
+        if (finfo[x].name[0] == 0x00) break;
+        if (finfo[x].name[0] == 0xe5) continue;
+        if ((finfo[x].type & 0x18) != 0) continue;
+        sprintf(s, "filename.ext %7d", finfo[x].size);
+        for (int y = 0; y < 8; y++) {
+            s[y] = finfo[x].name[y];
+        }
+        s[9] = finfo[x].ext[0];
+        s[10] = finfo[x].ext[1];
+        s[11] = finfo[x].ext[2];
+        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
+        cons_newline(cons);
+    }
+    cons_newline(cons);
+}
+void cmd_cat(Console* cons, char* cmdline) {
+    FileInfo* finfo = file_search(cmdline + 4, (FileInfo*)(ADR_DISKIMG + 0x002600), 224);
+
+    if (finfo != 0) {
+        char* p = (char*)memman_alloc_4k(memman, finfo->size);
+        file_loadfile(finfo->clustno, finfo->size, p, fat, (char*)(ADR_DISKIMG + 0x003e00));
+        for (int i = 0; i < finfo->size; i++) {
+            cons_putchar(cons, p[i], 1);
+        }
+        memman_free_4k(memman, (int)p, finfo->size);
+    } else {
+        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
+        cons_newline(cons);
+    }
+    cons_newline(cons);
 }
