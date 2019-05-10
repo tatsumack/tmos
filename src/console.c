@@ -17,6 +17,7 @@ void cmd_mem(Console* cons);
 void cmd_clear(Console* cons);
 void cmd_ls(Console* cons);
 void cmd_cat(Console* cons, char* cmdline);
+void cmd_hlt(Console* cons);
 
 int* fat = NULL;
 
@@ -160,6 +161,8 @@ void cons_runcmd(char* cmdline, Console* cons) {
         cmd_ls(cons);
     } else if (strncmp(cmdline, "cat ", 4) == 0) {
         cmd_cat(cons, cmdline);
+    } else if (strcmp(cmdline, "hlt") == 0) {
+        cmd_hlt(cons);
     } else if (cmdline[0] != 0) {
         sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
         cons_newline(cons);
@@ -222,6 +225,24 @@ void cmd_cat(Console* cons, char* cmdline) {
         memman_free_4k(memman, (int)p, finfo->size);
     } else {
         sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
+        cons_newline(cons);
+    }
+    cons_newline(cons);
+}
+
+void cmd_hlt(Console* cons) {
+    FileInfo* finfo = file_search("HLT.BIN", (FileInfo*)(ADR_DISKIMG + 0x002600), 224);
+    SegmentDescriptor* gdt = (SegmentDescriptor*)ADR_GDT;
+
+    if (finfo != 0) {
+        char* p = (char*)memman_alloc_4k(memman, finfo->size);
+        file_loadfile(finfo->clustno, finfo->size, p, fat, (char*)(ADR_DISKIMG + 0x003e00));
+        set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
+        far_jmp(0, 1003 * 8);
+        memman_free_4k(memman, (int)p, finfo->size);
+    } else {
+        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
+        cons_newline(cons);
         cons_newline(cons);
     }
     cons_newline(cons);
