@@ -30,7 +30,7 @@ ${BIN_PATH}/bootpack.bin: ${OBJS} ${BIN_PATH}/asmfunc.o
 ${BIN_PATH}/tmos.sys: ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin
 	cat ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin > ${BIN_PATH}/tmos.sys
 
-${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello.bin ${BIN_PATH}/a.bin ${BIN_PATH}/hello3.bin
+${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello.bin ${BIN_PATH}/a.bin ${BIN_PATH}/hello3.bin ${BIN_PATH}/crack1.bin
 	mformat -f 1440 -C -B ${BIN_PATH}/ipl.bin -i ${BIN_PATH}/tmos.img ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/tmos.sys ::
 	mcopy -i ${BIN_PATH}/tmos.img ${SRC_PATH}/ipl.asm ::
@@ -38,12 +38,16 @@ ${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/hello.bin ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/a.bin ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/hello3.bin ::
+	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/crack1.bin ::
 
 ${BIN_PATH}/a.bin: ${BIN_PATH}/a.o ${BIN_PATH}/a_asm.o
 	$(LD) -m elf_i386 -e tmos_main -o ${BIN_PATH}/a.bin -T${SRC_PATH}/tmos.ls ${BIN_PATH}/a_asm.o ${BIN_PATH}/a.o -static -L$(LIB_PATH) -lgolibc
 
 ${BIN_PATH}/hello3.bin: ${BIN_PATH}/hello3.o ${BIN_PATH}/a_asm.o
 	$(LD) -m elf_i386 -e tmos_main -o ${BIN_PATH}/hello3.bin -T${SRC_PATH}/tmos.ls ${BIN_PATH}/a_asm.o ${BIN_PATH}/hello3.o -static -L$(LIB_PATH) -lgolibc
+
+${BIN_PATH}/crack1.bin: ${BIN_PATH}/crack1.o ${BIN_PATH}/a_asm.o
+	$(LD) -m elf_i386 -e tmos_main -o ${BIN_PATH}/crack1.bin -T${SRC_PATH}/tmos.ls ${BIN_PATH}/a_asm.o ${BIN_PATH}/crack1.o -static -L$(LIB_PATH) -lgolibc
 
 run: ${BIN_PATH}/tmos.img
 	qemu-system-i386 -m 32 -drive file=${BIN_PATH}/tmos.img,format=raw,index=0,if=floppy
