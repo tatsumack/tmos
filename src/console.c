@@ -25,6 +25,12 @@ void cmd_cat(Console* cons, char* cmdline);
 
 int cmd_app(Console* cons, char* cmdline);
 
+void cons_putstr0(Console* cons, char* s);
+
+void cons_putstrn(Console* cons, char* s, int n);
+
+void tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
+
 int* fat = NULL;
 
 void console_task(Sheet* sht) {
@@ -170,7 +176,7 @@ void cons_runcmd(char* cmdline, Console* cons) {
         cmd_cat(cons, cmdline);
     } else if (cmdline[0] != 0) {
         if (cmd_app(cons, cmdline) == 0) {
-            sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "command not found", 17);
+            cons_putstr0(cons, "command not found\n\n");
             cons_newline(cons);
             cons_newline(cons);
         }
@@ -180,14 +186,9 @@ void cons_runcmd(char* cmdline, Console* cons) {
 void cmd_mem(Console* cons) {
     uint memtotal = memtest(0x00400000, 0xbfffffff);
 
-    char s[30];
-    sprintf(s, "total %dMB", memtotal / (1024 * 1024));
-    sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
-    cons_newline(cons);
-    sprintf(s, "free %dKB", memman_total_free_size(memman) / 1024);
-    sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
-    cons_newline(cons);
-    cons_newline(cons);
+    char s[60];
+    sprintf(s, "total %dMB\nfree %dKB\n\n", memtotal / (1024 * 1024), memman_total_free_size(memman) / 1024);
+    cons_putstr0(cons, s);
 }
 
 void cmd_clear(Console* cons) {
@@ -215,7 +216,7 @@ void cmd_ls(Console* cons) {
         s[9] = finfo[x].ext[0];
         s[10] = finfo[x].ext[1];
         s[11] = finfo[x].ext[2];
-        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
+        cons_putstr0(cons, s);
         cons_newline(cons);
     }
     cons_newline(cons);
@@ -227,12 +228,10 @@ void cmd_cat(Console* cons, char* cmdline) {
     if (finfo != 0) {
         char* p = (char*)memman_alloc_4k(memman, finfo->size);
         file_loadfile(finfo->clustno, finfo->size, p, fat, (char*)(ADR_DISKIMG + 0x003e00));
-        for (int i = 0; i < finfo->size; i++) {
-            cons_putchar(cons, p[i], 1);
-        }
+        cons_putstrn(cons, p, finfo->size);
         memman_free_4k(memman, (int)p, finfo->size);
     } else {
-        sheet_putstring(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "file not found", 14);
+        cons_putstr0(cons, "file not found\n");
         cons_newline(cons);
     }
     cons_newline(cons);
@@ -259,6 +258,7 @@ int cmd_app(Console* cons, char* cmdline) {
     if (finfo != 0) {
         char* p = (char*)memman_alloc_4k(memman, finfo->size);
         file_loadfile(finfo->clustno, finfo->size, p, fat, (char*)(ADR_DISKIMG + 0x003e00));
+        *((int*)0xfe8) = (int)p;
 
         SegmentDescriptor* gdt = (SegmentDescriptor*)ADR_GDT;
         set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
@@ -271,4 +271,35 @@ int cmd_app(Console* cons, char* cmdline) {
     }
 
     return 0;
+}
+
+void cons_putstr0(Console* cons, char* s) {
+    for (; *s != 0; s++) {
+        cons_putchar(cons, *s, 1);
+    }
+}
+
+void cons_putstrn(Console* cons, char* s, int n) {
+    for (int i = 0; i < n; i++) {
+        cons_putchar(cons, s[i], 1);
+    }
+}
+
+void tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax) {
+    Console* cons = (Console*)*(int*)0x0fec;
+    int cs_base = *((int*)0xfe8);
+    switch (edx) {
+        case 1:
+            cons_putchar(cons, eax & 0xff, 1);
+            break;
+        case 2:
+            cons_putstr0(cons, (char*)ebx + cs_base);
+            break;
+        case 3:
+            cons_putstrn(cons, (char*)ebx + cs_base, ecx);
+            break;
+        default:
+            TMOS_ERROR("tmos_api: invalid edx");
+            break;
+    }
 }

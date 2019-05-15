@@ -90,7 +90,7 @@ void asm_inthandler27(void);
 
 void asm_inthandler2c(void);
 
-void asm_cons_putchar(void);
+void asm_tmos_api(void);
 
 int asm_memtest(int start, int end);
 

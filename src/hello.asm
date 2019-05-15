@@ -1,13 +1,7 @@
 [BITS 32]           ; 32bit mode
-    MOV     ECX, msg
-putloop:
-    MOV     AL, [CS:ECX]
-    CMP     AL, 0
-    JE      fin
+    MOV     EDX, 2
+    MOV     EBX, msg
     INT     0x40
-    ADD     ECX, 1
-    JMP     putloop
-fin:
     RETF
 msg:
     DB      "hello", 0
