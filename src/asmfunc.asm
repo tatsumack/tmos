@@ -16,16 +16,19 @@
     GLOBAL load_gdtr
     GLOBAL load_idtr
     GLOBAL far_jmp
+    GLOBAL far_call
     GLOBAL asm_inthandler20
     GLOBAL asm_inthandler21
     GLOBAL asm_inthandler27
     GLOBAL asm_inthandler2c
     GLOBAL asm_memtest
+    GLOBAL asm_cons_putchar
 
     EXTERN inthandler20
     EXTERN inthandler21
     EXTERN inthandler27
     EXTERN inthandler2c
+    EXTERN cons_putchar
 
 [SECTION .text]
 
@@ -96,6 +99,10 @@ load_idtr: ; void load_idtr(int limit, int addr);
 
 far_jmp: ; void far_jmp(int eip, int cs);
     JMP     FAR [ESP+4]
+    RET
+
+far_call: ; void far_call(int eip, int cs);
+    CALL    FAR [ESP+4]
     RET
 
 asm_inthandler20:
@@ -191,4 +198,14 @@ asm_memtest_fin:
     POP     ESI
     POP     EDI
     RET
+
+asm_cons_putchar:
+    STI
+    PUSH    1
+    AND     EAX, 0xff
+    PUSH    EAX                     ; char
+    PUSH    DWORD [0x0fec]          ; &cons
+    CALL    cons_putchar
+    ADD     ESP, 12
+    IRETD
 

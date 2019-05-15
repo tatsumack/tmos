@@ -80,6 +80,8 @@ void load_idtr(int limit, int addr);
 
 void far_jmp(int eip, int cs);
 
+void far_call(int eip, int cs);
+
 void asm_inthandler20(void);
 
 void asm_inthandler21(void);
@@ -87,6 +89,8 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 
 void asm_inthandler2c(void);
+
+void asm_cons_putchar(void);
 
 int asm_memtest(int start, int end);
 
