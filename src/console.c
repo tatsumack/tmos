@@ -262,7 +262,14 @@ int cmd_app(Console* cons, char* cmdline) {
 
         SegmentDescriptor* gdt = (SegmentDescriptor*)ADR_GDT;
         set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
-
+        if (finfo->size >= 8 && strncmp(p + 4, "TMOS", 4) == 0) {
+            p[0] = 0xe8;
+            p[1] = 0x16;
+            p[2] = 0x00;
+            p[3] = 0x00;
+            p[4] = 0x00;
+            p[5] = 0xcb;
+        }
         far_call(0, 1003 * 8);
 
         memman_free_4k(memman, (int)p, finfo->size);
