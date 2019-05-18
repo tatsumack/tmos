@@ -3,6 +3,7 @@
 #include "bootpack.h"
 
 extern MemoryManager* memman;
+extern SheetManager* shtman;
 
 int* fat = NULL;
 
@@ -277,20 +278,36 @@ void cons_putstrn(Console* cons, char* s, int n) {
 
 int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax) {
     Console* cons = (Console*)*(int*)0x0fec;
-    int cs_base = *((int*)0xfe8);
+    int ds_base = *((int*)0xfe8);
     Task* task = task_now();
+    int* reg = &eax + 1;
     switch (edx) {
         case 1:
             cons_putchar(cons, eax & 0xff, 1);
             break;
         case 2:
-            cons_putstr0(cons, (char*)ebx + cs_base);
+            cons_putstr0(cons, (char*)ebx + ds_base);
             break;
         case 3:
-            cons_putstrn(cons, (char*)ebx + cs_base, ecx);
+            cons_putstrn(cons, (char*)ebx + ds_base, ecx);
             break;
         case 4:
             return (int)&(task->tss.esp0);
+        case 5: {
+            uchar* buf = (uchar*)ebx + ds_base;
+            int width = esi;
+            int height = edi;
+            int col_inv = eax;
+            char* title = (char*)ecx + ds_base;
+
+            Sheet* sht = sheet_alloc(shtman);
+            sheet_set_buf(sht, buf, width, height, col_inv);
+            make_window(buf, width, height, title, 0);
+            sheet_slide(sht, 100, 50);
+            sheet_updown(sht, 3);
+            reg[7] = (int)sht;
+            break;
+        }
         default:
             TMOS_ERROR("tmos_api: invalid edx");
             break;

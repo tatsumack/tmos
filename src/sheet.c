@@ -82,7 +82,7 @@ void sheet_updown(Sheet* sht, int zorder) {
         sheet_refresh_sub(shtman, sht->vx, sht->vy, sht->vx + sht->width, sht->vy + sht->height, 0, old - 1);
     } else if (old < 0 && zorder >= 0) {
         // visible
-        for (int i = shtman->top; i >= zorder; i++) {
+        for (int i = shtman->top; i >= zorder; i--) {
             shtman->zorders[i + 1] = shtman->zorders[i];
             shtman->zorders[i + 1]->zorder = i + 1;
         }
