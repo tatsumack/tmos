@@ -15,6 +15,9 @@ ${BIN_PATH}/asmfunc.o: ${SRC_PATH}/asmfunc.asm
 ${BIN_PATH}/%.bin: ${SRC_PATH}/%.asm
 	nasm $< -o $@
 
+${BIN_PATH}/crack2.bin: ${SRC_PATH}/${APP_PATH}/crack2.asm
+	nasm $< -o $@
+
 ${BIN_PATH}/%.o: ${SRC_PATH}/${APP_PATH}/%.asm
 	nasm -felf32 -o $@ $<
 
@@ -30,7 +33,7 @@ ${BIN_PATH}/bootpack.bin: ${OBJS} ${BIN_PATH}/asmfunc.o
 ${BIN_PATH}/tmos.sys: ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin
 	cat ${BIN_PATH}/tmos.bin ${BIN_PATH}/bootpack.bin > ${BIN_PATH}/tmos.sys
 
-${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello.bin ${BIN_PATH}/a.bin ${BIN_PATH}/hello3.bin ${BIN_PATH}/crack1.bin
+${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello.bin ${BIN_PATH}/a.bin ${BIN_PATH}/hello3.bin ${BIN_PATH}/crack1.bin ${BIN_PATH}/crack2.bin
 	mformat -f 1440 -C -B ${BIN_PATH}/ipl.bin -i ${BIN_PATH}/tmos.img ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/tmos.sys ::
 	mcopy -i ${BIN_PATH}/tmos.img ${SRC_PATH}/ipl.asm ::
@@ -39,6 +42,7 @@ ${BIN_PATH}/tmos.img: ${BIN_PATH}/ipl.bin ${BIN_PATH}/tmos.sys ${BIN_PATH}/hello
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/a.bin ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/hello3.bin ::
 	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/crack1.bin ::
+	mcopy -i ${BIN_PATH}/tmos.img ${BIN_PATH}/crack2.bin ::
 
 ${BIN_PATH}/a.bin: ${BIN_PATH}/a.o ${BIN_PATH}/a_asm.o
 	$(LD) -m elf_i386 -e tmos_main -o ${BIN_PATH}/a.bin -T${SRC_PATH}/tmos.ls ${BIN_PATH}/a_asm.o ${BIN_PATH}/a.o -static -L$(LIB_PATH) -lgolibc

@@ -32,7 +32,7 @@ void init_pic(void) {
 #define PORT_KEYDAT 0x0060
 
 // interrupted by keyboard
-void inthandler21(int *esp) {
+void inthandler21(int* esp) {
     io_out8(PIC0_OCW2, 0x61);  // ack
 
     FIFOData data;
@@ -42,7 +42,7 @@ void inthandler21(int *esp) {
 }
 
 // interrupted by mouse
-void inthandler2c(int *esp) {
+void inthandler2c(int* esp) {
     io_out8(PIC1_OCW2, 0x64);  // ack
     io_out8(PIC0_OCW2, 0x62);  // ack
 
@@ -53,6 +53,6 @@ void inthandler2c(int *esp) {
 }
 
 // interrupted by PIC1 on initialization
-void inthandler27(int *esp) {
+void inthandler27(int* esp) {
     io_out8(PIC0_OCW2, 0x67);  // ack to IRQ-07
 }

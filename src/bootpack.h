@@ -82,6 +82,10 @@ void far_jmp(int eip, int cs);
 
 void far_call(int eip, int cs);
 
+void start_app(int eip, int cs, int esp, int ds, int* tss_esp0);
+
+void asm_inthandler0d(void);
+
 void asm_inthandler20(void);
 
 void asm_inthandler21(void);
@@ -388,6 +392,7 @@ typedef struct FileInfo {
 } FileInfo;
 
 void console_task(Sheet* sht);
+int inthandler0d(int* esp);
 
 // file.c
 void file_readfat(int* fat, uchar* img);

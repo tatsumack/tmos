@@ -17,6 +17,8 @@
     GLOBAL load_idtr
     GLOBAL far_jmp
     GLOBAL far_call
+    GLOBAL start_app
+    GLOBAL asm_inthandler0d
     GLOBAL asm_inthandler20
     GLOBAL asm_inthandler21
     GLOBAL asm_inthandler27
@@ -24,6 +26,7 @@
     GLOBAL asm_memtest
     GLOBAL asm_tmos_api
 
+    EXTERN inthandler0d
     EXTERN inthandler20
     EXTERN inthandler21
     EXTERN inthandler27
@@ -104,6 +107,26 @@ far_jmp: ; void far_jmp(int eip, int cs);
 far_call: ; void far_call(int eip, int cs);
     CALL    FAR [ESP+4]
     RET
+
+asm_inthandler0d:
+    PUSH	ES
+    PUSH	DS
+    PUSHAD
+    MOV		EAX,ESP
+    PUSH	EAX
+    MOV		AX,SS
+    MOV		DS,AX
+    MOV		ES,AX
+    CALL	inthandler0d
+    CMP     EAX, 0
+    JNE     end_app
+    POP		EAX
+    POPAD
+    POP		DS
+    POP		ES
+    ADD     ESP, 4
+    IRETD
+
 
 asm_inthandler20:
     PUSH	ES
@@ -201,9 +224,76 @@ asm_memtest_fin:
 
 asm_tmos_api:
     STI
-    PUSHAD
-    PUSHAD      ; arguments for tmos_api
+    PUSH    DS
+    PUSH    ES
+    PUSHAD              ; save register
+    PUSHAD              ; arguments for tmos_api
+    MOV     AX, SS
+    MOV     DS, AX
+    MOV     ES, AX
     CALL    tmos_api
-    ADD     ESP, 32
+    CMP     EAX, 0
+    JNE     end_app
     POPAD
+    POP     ES
+    POP     DS
     IRETD
+end_app:
+    MOV     ESP, [EAX]  ; eax is tss.esp0
+    POPAD
+    RET                 ; return to cmd_app
+
+start_app: ; void start_app(int eip, int cs, int esp, int ds, int* tss_esp0)
+    PUSHAD
+    MOV     EAX, [ESP+36]       ; eip
+    MOV     ECX, [ESP+40]       ; cs
+    MOV     EDX, [ESP+44]       ; esp
+    MOV     EBX, [ESP+48]       ; ds/ss
+    MOV     EBX, [ESP+52]       ; tss.esp0
+    MOV     [EBP], ESP          ; save esp of os
+    MOV     [EBP+4], SS         ; save ss of os
+    MOV     ES, BX
+    MOV     DS, BX
+    MOV     FS, BX
+    MOV     GS, BX
+    OR      ECX, 3
+    OR      EBX, 3
+    PUSH    EBX
+    PUSH    EDX
+    PUSH    ECX
+    PUSH    EAX
+    RETF                        ; NOTE os can't call app.
+
+    ; finish app
+    MOV     EAX, 1 * 8
+    CLI
+    MOV     ES, AX
+    MOV     SS, AX
+    MOV     DS, AX
+    MOV     FS, AX
+    MOV     GS, AX
+    MOV     ESP, [0xfe4]
+    STI
+    POPAD
+    RET
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
