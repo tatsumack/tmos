@@ -234,6 +234,7 @@ asm_tmos_api:
     CALL    tmos_api
     CMP     EAX, 0
     JNE     end_app
+    ADD     ESP, 32
     POPAD
     POP     ES
     POP     DS
@@ -249,7 +250,7 @@ start_app: ; void start_app(int eip, int cs, int esp, int ds, int* tss_esp0)
     MOV     ECX, [ESP+40]       ; cs
     MOV     EDX, [ESP+44]       ; esp
     MOV     EBX, [ESP+48]       ; ds/ss
-    MOV     EBX, [ESP+52]       ; tss.esp0
+    MOV     EBP, [ESP+52]       ; tss.esp0
     MOV     [EBP], ESP          ; save esp of os
     MOV     [EBP+4], SS         ; save ss of os
     MOV     ES, BX
@@ -263,37 +264,3 @@ start_app: ; void start_app(int eip, int cs, int esp, int ds, int* tss_esp0)
     PUSH    ECX
     PUSH    EAX
     RETF                        ; NOTE os can't call app.
-
-    ; finish app
-    MOV     EAX, 1 * 8
-    CLI
-    MOV     ES, AX
-    MOV     SS, AX
-    MOV     DS, AX
-    MOV     FS, AX
-    MOV     GS, AX
-    MOV     ESP, [0xfe4]
-    STI
-    POPAD
-    RET
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
