@@ -22,6 +22,7 @@ int cursor_x = 8;
 int cursor_c = COL8_FFFFFF;
 
 int key_to = 0;
+int key_ctrl = 0;
 
 Task* task_a;
 Task* task_cons;
@@ -178,6 +179,16 @@ void update_keyboard(int val) {
         fifo_put(&task_cons->fifo, data);
         return;
     }
+
+    if (key_ctrl == 1 && val == 0xae && task_cons->tss.ss0 != 0) {
+        Console* cons = (Console*)*(int*)0x0fec;
+        cons_putstr0(cons, "\nquit.\n");
+        io_cli();
+        task_cons->tss.eax = (int)&(task_cons->tss.esp0);
+        task_cons->tss.eip = (int)asm_end_app;
+        return;
+    }
+
     if (get_key(val) != 0 && cursor_x < 128) {
         char s[40];
         s[0] = get_key(val);
@@ -210,6 +221,12 @@ void update_keyboard(int val) {
 
         sheet_refresh(sht_win, 0, 0, sht_win->width, 21);
         sheet_refresh(sht_cons, 0, 0, sht_cons->width, 21);
+    }
+    if (val == 0x1c || val == 0x1d) {
+        key_ctrl = 1;
+    }
+    if (val == 0x9c || val == 0x9d) {
+        key_ctrl = 0;
     }
 
     if (cursor_c >= 0) {

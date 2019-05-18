@@ -4,33 +4,6 @@
 
 extern MemoryManager* memman;
 
-typedef struct Console {
-    Sheet* sht;
-    int cur_x, cur_y, cur_c;
-} Console;
-
-void cons_putchar(Console* cons, int chr, char move);
-
-void cons_newline(Console* cons);
-
-void cons_runcmd(char* cmdline, Console* cons);
-
-void cmd_mem(Console* cons);
-
-void cmd_clear(Console* cons);
-
-void cmd_ls(Console* cons);
-
-void cmd_cat(Console* cons, char* cmdline);
-
-int cmd_app(Console* cons, char* cmdline);
-
-void cons_putstr0(Console* cons, char* s);
-
-void cons_putstrn(Console* cons, char* s, int n);
-
-int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
-
 int* fat = NULL;
 
 void console_task(Sheet* sht) {

@@ -98,6 +98,8 @@ void asm_inthandler2c(void);
 
 void asm_tmos_api(void);
 
+void asm_end_app(void);
+
 int asm_memtest(int start, int end);
 
 // fifo.c
@@ -393,7 +395,37 @@ typedef struct FileInfo {
     uint size;
 } FileInfo;
 
+typedef struct Console {
+    Sheet* sht;
+    int cur_x, cur_y, cur_c;
+} Console;
+
+void cons_putchar(Console* cons, int chr, char move);
+
+void cons_newline(Console* cons);
+
+void cons_runcmd(char* cmdline, Console* cons);
+
+void cmd_mem(Console* cons);
+
+void cmd_clear(Console* cons);
+
+void cmd_ls(Console* cons);
+
+void cmd_cat(Console* cons, char* cmdline);
+
+int cmd_app(Console* cons, char* cmdline);
+
+void cons_putstr0(Console* cons, char* s);
+
+void cons_putstrn(Console* cons, char* s, int n);
+
+int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
+
 void console_task(Sheet* sht);
+
+int inthandler0c(int* esp);
+
 int inthandler0d(int* esp);
 
 // file.c

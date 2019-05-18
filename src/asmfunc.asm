@@ -26,6 +26,7 @@
     GLOBAL asm_inthandler2c
     GLOBAL asm_memtest
     GLOBAL asm_tmos_api
+    GLOBAL asm_end_app
 
     EXTERN inthandler0c
     EXTERN inthandler0d
@@ -285,3 +286,10 @@ start_app: ; void start_app(int eip, int cs, int esp, int ds, int* tss_esp0)
     PUSH    ECX
     PUSH    EAX
     RETF                        ; NOTE os can't call app.
+
+asm_end_app:
+    MOV     ESP, [EAX]          ; eax is tss.esp0
+    MOV     DWORD [EAX+4], 0
+    POPAD
+    RET                 ; return to cmd_app
+

@@ -72,6 +72,7 @@ Task* task_alloc(void) {
         task->tss.gs = 0;
         task->tss.ldtr = 0;
         task->tss.iomap = 0x40000000;
+        task->tss.ss0 = 0;
         return task;
     }
     TMOS_ERROR("can't find not used task");
