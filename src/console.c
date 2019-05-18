@@ -282,17 +282,21 @@ int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     Task* task = task_now();
     int* reg = &eax + 1;
     switch (edx) {
-        case 1:
+        case 1: {
             cons_putchar(cons, eax & 0xff, 1);
             break;
-        case 2:
+        }
+        case 2: {
             cons_putstr0(cons, (char*)ebx + ds_base);
             break;
-        case 3:
+        }
+        case 3: {
             cons_putstrn(cons, (char*)ebx + ds_base, ecx);
             break;
-        case 4:
+        }
+        case 4: {
             return (int)&(task->tss.esp0);
+        }
         case 5: {
             uchar* buf = (uchar*)ebx + ds_base;
             int width = esi;
@@ -306,6 +310,18 @@ int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
             sheet_slide(sht, 100, 50);
             sheet_updown(sht, 3);
             reg[7] = (int)sht;
+            break;
+        }
+        case 6: {
+            Sheet* sht = (Sheet*)ebx;
+            putstring(sht->buf, sht->width, esi, edi, eax, (char*)ebp + ds_base);
+            sheet_refresh(sht, esi, edi, esi + ecx * 8, edi + 16);
+            break;
+        }
+        case 7: {
+            Sheet* sht = (Sheet*)ebx;
+            draw_rec(sht->buf, sht->width, ebp, eax, ecx, esi, edi);
+            sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
             break;
         }
         default:
