@@ -130,7 +130,7 @@ void activate(void) {
         make_window(buf_win, 144, 52, "task_a", 1);
         make_textbox(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 
-        sheet_slide(sht_win, 64, 56);
+        sheet_slide(sht_win, 500, 560);
         sheet_updown(sht_win, 2);
     }
 
