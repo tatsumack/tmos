@@ -312,7 +312,7 @@ int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
             cons_putstrn(cons, (char*)ebx + cs_base, ecx);
             break;
         case 4:
-            return &(task->tss.esp0);
+            return (int)&(task->tss.esp0);
         default:
             TMOS_ERROR("tmos_api: invalid edx");
             break;
@@ -325,5 +325,5 @@ int inthandler0d(int* esp) {
     Console* cons = (Console*)*(int*)0x0fec;
     Task* task = task_now();
     cons_putstr0(cons, "\nINT 0d:\n General Protected Exception.\n");
-    return &(task->tss.esp0);
+    return (int)&(task->tss.esp0);
 }
