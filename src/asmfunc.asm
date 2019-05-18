@@ -18,6 +18,7 @@
     GLOBAL far_jmp
     GLOBAL far_call
     GLOBAL start_app
+    GLOBAL asm_inthandler0c
     GLOBAL asm_inthandler0d
     GLOBAL asm_inthandler20
     GLOBAL asm_inthandler21
@@ -26,6 +27,7 @@
     GLOBAL asm_memtest
     GLOBAL asm_tmos_api
 
+    EXTERN inthandler0c
     EXTERN inthandler0d
     EXTERN inthandler20
     EXTERN inthandler21
@@ -107,6 +109,25 @@ far_jmp: ; void far_jmp(int eip, int cs);
 far_call: ; void far_call(int eip, int cs);
     CALL    FAR [ESP+4]
     RET
+
+asm_inthandler0c:
+    PUSH	ES
+    PUSH	DS
+    PUSHAD
+    MOV		EAX,ESP
+    PUSH	EAX
+    MOV		AX,SS
+    MOV		DS,AX
+    MOV		ES,AX
+    CALL	inthandler0c
+    CMP     EAX, 0
+    JNE     end_app
+    POP		EAX
+    POPAD
+    POP		DS
+    POP		ES
+    ADD     ESP, 4
+    IRETD
 
 asm_inthandler0d:
     PUSH	ES

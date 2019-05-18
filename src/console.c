@@ -320,10 +320,28 @@ int tmos_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     return 0;
 }
 
-// interrupted by exception
+// interrupted by stack exception
+int inthandler0c(int* esp) {
+    Console* cons = (Console*)*(int*)0x0fec;
+    Task* task = task_now();
+    cons_putstr0(cons, "\nINT 0C:\n Stack Exception.\n");
+
+    char s[30];
+    sprintf(s, "EIP = %08X\n", esp[11]);
+    cons_putstr0(cons, s);
+
+    return (int)&(task->tss.esp0);
+}
+
+// interrupted by general protected exception
 int inthandler0d(int* esp) {
     Console* cons = (Console*)*(int*)0x0fec;
     Task* task = task_now();
-    cons_putstr0(cons, "\nINT 0d:\n General Protected Exception.\n");
+    cons_putstr0(cons, "\nINT 0D:\n General Protected Exception.\n");
+
+    char s[30];
+    sprintf(s, "EIP = %08X\n", esp[11]);
+    cons_putstr0(cons, s);
+
     return (int)&(task->tss.esp0);
 }
